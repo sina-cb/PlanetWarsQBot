@@ -121,7 +121,10 @@ class Planet {
 class PlanetWars {
  public:
   // Initializes the game state given a string containing game state data.
-  PlanetWars(const std::string& game_state);
+  PlanetWars();
+
+  int Initialize(const std::string& game_state);
+  int Update(const std::string& game_state);
 
   // Returns the number of planets on the map. Planets are numbered starting
   // with 0.
