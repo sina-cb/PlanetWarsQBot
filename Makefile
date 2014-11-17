@@ -4,7 +4,7 @@ LIBS=-lboost_thread
 LDFLAGS=-L/usr/lib/ $(LIBS)
 SOURCES=QBot.cc PlanetWars.cc Colony.cpp CentralGovernment.cpp
 OBJECTS=$(SOURCES:.cpp=.o)
-EXECUTABLE=QBot
+EXECUTABLE=QBot.bin
 
 all: $(SOURCES) $(EXECUTABLE)
 
