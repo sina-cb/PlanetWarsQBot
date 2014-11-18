@@ -24,11 +24,22 @@ void CentralGovernment::DoTurn(const PlanetWars &pw){
 }
 
 void CentralGovernment::HandleColonies(const PlanetWars &pw){
-	boost::thread first_worker(&Colony::DoTurn, colonies[0], pw);
 
-	std::cout << "Start Turn!" << std::endl;
-	first_worker.join();
-	std::cout << "End Turn!" << std::endl;
+	vector<boost::thread*> thread_array;
+
+	for (size_t i = 0; i < colonies.size(); i++){
+		boost::thread* worker = new boost::thread(&Colony::DoTurn, colonies[i], pw);
+		thread_array.push_back(worker);
+	}
+
+	for (size_t i = 0; i < thread_array.size(); i++){
+		sprintf(logger->buffer, "Start thread %d", i);
+		logger->log();
+		thread_array[i]->join();
+		sprintf(logger->buffer, "End thread %d", i);
+		logger->log();
+	}
+
 }
 
 void CentralGovernment::UpdateColonies(const PlanetWars &pw){
@@ -97,7 +108,7 @@ void CentralGovernment::UpdateColonies(const PlanetWars &pw){
 			colonyIndex = colonies.size() - 1;
 		}
 
-/*		sprintf(logger->buffer, "Colonies Count After Adding New Planet: %d", colonies.size());
+		/*		sprintf(logger->buffer, "Colonies Count After Adding New Planet: %d", colonies.size());
 		logger->log();*/
 
 		colonies[colonyIndex]->addPlanet(planet);

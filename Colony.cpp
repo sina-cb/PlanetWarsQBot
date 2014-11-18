@@ -58,6 +58,7 @@ void Colony::DoTurn(const PlanetWars &pw) {
 	int dest = -1;
 	double dest_score = 999999.0;
 	for (int i = 0; i < COLONY_MAX_NEIGHBORS_FOR_EACH_PLANET; ++i) {
+		bool found_one = false;
 		if (neighbors[i] != -1){
 			const Planet* p = pw.GetPlanet(neighbors[i]);
 			double score = p->NumShips();
@@ -65,6 +66,11 @@ void Colony::DoTurn(const PlanetWars &pw) {
 				dest_score = score;
 				dest = p->PlanetID();
 			}
+			found_one = true;
+		}
+
+		if (!found_one){
+			dest = pw.EnemyPlanets()[0]->PlanetID();
 		}
 	}
 	// (4) Send half the ships from my strongest planet to the weakest

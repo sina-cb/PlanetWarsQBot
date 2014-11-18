@@ -1,0 +1,76 @@
+Planets Before Add: -1	-1	-1
+Planets After Add: 1	-1	-1
+Add Planet 1 ID = 1
+
+Neighbors Before Add: -1	-1	-1
+Neighbors After Add: 4	-1	-1
+Add Neighbor 1 ID = 4
+
+Neighbors Before Add: 4	-1	-1
+Neighbors After Add: 4	7	-1
+Add Neighbor 2 ID = 7
+
+Neighbors Before Add: 4	7	-1
+Neighbors After Add: 4	7	10
+Add Neighbor 3 ID = 10
+
+Neighbors Before Remove: 4	7	10
+Neighbors After Remove: -1	7	10
+Remove Neighbor 2 ID = 4
+
+Planets Before Add: 1	-1	-1
+Planets After Add: 1	4	-1
+Add Planet 2 ID = 4
+
+Neighbors Before Add: -1	7	10
+Neighbors After Add: 18	7	10
+Add Neighbor 3 ID = 18
+
+Neighbors Before Add: 18	7	10
+Neighbors After Add: 18	7	10
+Add Neighbor 3 ID = 12
+
+Neighbors Before Add: 18	7	10
+Neighbors After Add: 18	7	10
+Add Neighbor 3 ID = 0
+
+Neighbors Before Remove: 18	7	10
+Neighbors After Remove: -1	7	10
+Remove Neighbor 2 ID = 18
+
+Planets Before Add: 1	4	-1
+Planets After Add: 1	4	18
+Add Planet 3 ID = 18
+
+Neighbors Before Add: -1	7	10
+Neighbors After Add: 21	7	10
+Add Neighbor 3 ID = 21
+
+Neighbors Before Add: 21	7	10
+Neighbors After Add: 21	7	10
+Add Neighbor 3 ID = 0
+
+Neighbors Before Add: 21	7	10
+Neighbors After Add: 21	7	10
+Add Neighbor 3 ID = 19
+
+Neighbors Before Remove: 21	7	10
+Neighbors After Remove: -1	7	10
+Remove Neighbor 2 ID = 21
+
+Neighbors Before Remove: -1	7	10
+Neighbors After Remove: -1	-1	10
+Remove Neighbor 1 ID = 7
+
+Neighbors Before Remove: -1	-1	10
+Neighbors After Remove: -1	-1	-1
+Remove Neighbor 0 ID = 10
+
+Planets Before Remove: 1	4	18
+Planets After Remove: 1	4	-1
+Remove Planet 2 ID = 18
+
+Planets Before Add: 1	4	-1
+Planets After Add: 1	4	11
+Add Planet 3 ID = 11
+
