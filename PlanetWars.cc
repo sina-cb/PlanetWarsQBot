@@ -5,7 +5,6 @@
 #include <sstream>
 #include <string>
 #include <assert.h>
-#include <algorithm>
 
 using namespace std;
 
@@ -108,8 +107,11 @@ void Planet::RemoveShips(int amount) {
 // ######### PlanetWars #########
 
 PlanetWars::PlanetWars() {
+	logger = new Logger("PlanetWars.log");
 	turn_ = 0;
 	num_planets_ = -1;
+	planetColony = new std::map<int, int>();
+	neutralPlanetColony = new std::map<int, int>();
 }
 
 int PlanetWars::NumPlanets() const {
@@ -189,15 +191,22 @@ PlanetList PlanetWars::NClosestPlanets(int origin_id, int n) const{
 PlanetList PlanetWars::NClosestMinePlanets(int origin_id, int n) const{
 	const int offset = origin_id * num_planets_;
 
+	sprintf(logger->buffer, "Here %d", n);
+	logger->log();
+
 	PlanetList planets_by_distance;
 	planets_by_distance.reserve(n);
 
-	for (int i = 1; i < n; ) {
+	int count = 0;
+	for (int i = 1; i < planets_.size(); i++) {
 		const int planet_index = offset + i;
 
 		if (planets_by_distance_[planet_index]->Owner() == ME){
 			planets_by_distance.push_back(planets_by_distance_[planet_index]);
-			i++;
+			count ++;
+			if (count == n){
+				break;
+			}
 		}
 	}
 
@@ -210,12 +219,38 @@ PlanetList PlanetWars::NClosestEnemyPlanets(int origin_id, int n) const{
 	PlanetList planets_by_distance;
 	planets_by_distance.reserve(n);
 
-	for (int i = 1; i < n; ) {
+	int count = 0;
+	for (int i = 1; i < planets_.size(); i++) {
 		const int planet_index = offset + i;
 
-		if (planets_by_distance_[planet_index]->Owner() == ME){
+		if (planets_by_distance_[planet_index]->Owner() == ENEMY){
 			planets_by_distance.push_back(planets_by_distance_[planet_index]);
-			i++;
+			count ++;
+			if (count == n){
+				break;
+			}
+		}
+	}
+
+	return planets_by_distance;
+}
+
+PlanetList PlanetWars::NClosestNeutralPlanets(int origin_id, int n) const{
+	const int offset = origin_id * num_planets_;
+
+	PlanetList planets_by_distance;
+	planets_by_distance.reserve(n);
+
+	int count = 0;
+	for (int i = 1; i < planets_.size() && i < planets_by_distance_.size(); i++) {
+		const int planet_index = offset + i;
+
+		if (planets_by_distance_[planet_index]->Owner() == NEUTRAL){
+			planets_by_distance.push_back(planets_by_distance_[planet_index]);
+			count ++;
+			if (count == n){
+				break;
+			}
 		}
 	}
 
@@ -263,8 +298,8 @@ std::string PlanetWars::ToString() const {
 	for (unsigned int i = 0; i < fleets_.size(); ++i) {
 		const Fleet* f = fleets_[i];
 		s << "F " << f->Owner() << " " << f->NumShips() << " " << f->SourcePlanet()
-																				<< " " << f->DestinationPlanet() << " " << f->TotalTripLength()
-																				<< " " << f->TurnsRemaining() << std::endl;
+																												<< " " << f->DestinationPlanet() << " " << f->TotalTripLength()
+																												<< " " << f->TurnsRemaining() << std::endl;
 	}
 	return s.str();
 }
@@ -361,78 +396,78 @@ struct DistanceComparer {
 };
 
 int PlanetWars::Initialize(const std::string& s) {
-    turn_ = 1;
+	turn_ = 1;
 
-    //Parse the game data.
-    planets_.clear();
-    fleets_.clear();
-    std::vector<std::string> lines = StringUtil::Tokenize(s, "\n");
-    int planet_id = 0;
+	//Parse the game data.
+	planets_.clear();
+	fleets_.clear();
+	std::vector<std::string> lines = StringUtil::Tokenize(s, "\n");
+	int planet_id = 0;
 
-    std::vector<int> fleet_source_ids;
-    std::vector<int> fleet_destination_ids;
+	std::vector<int> fleet_source_ids;
+	std::vector<int> fleet_destination_ids;
 
-    for (unsigned int i = 0; i < lines.size(); ++i) {
-        std::string& line = lines[i];
-        size_t comment_begin = line.find_first_of('#');
-        if (comment_begin != std::string::npos) {
-            line = line.substr(0, comment_begin);
-        }
+	for (unsigned int i = 0; i < lines.size(); ++i) {
+		std::string& line = lines[i];
+		size_t comment_begin = line.find_first_of('#');
+		if (comment_begin != std::string::npos) {
+			line = line.substr(0, comment_begin);
+		}
 
-        std::vector<std::string> tokens = StringUtil::Tokenize(line);
-        if (tokens.size() == 0) {
-            continue;
-        }
+		std::vector<std::string> tokens = StringUtil::Tokenize(line);
+		if (tokens.size() == 0) {
+			continue;
+		}
 
-        if (tokens[0] == "P") {
-            if (tokens.size() != 6) {
-                return 0;
-            }
+		if (tokens[0] == "P") {
+			if (tokens.size() != 6) {
+				return 0;
+			}
 
-            Planet* p = new Planet(planet_id++,              // The ID of this planet
-	                 atoi(tokens[3].c_str()),  // Owner
-                     atoi(tokens[4].c_str()),  // Num ships
-                     atoi(tokens[5].c_str()),  // Growth rate
-                     atof(tokens[1].c_str()),  // X
-                     atof(tokens[2].c_str())); // Y
-            planets_.push_back(p);
+			Planet* p = new Planet(planet_id++,              // The ID of this planet
+					atoi(tokens[3].c_str()),  // Owner
+					atoi(tokens[4].c_str()),  // Num ships
+					atoi(tokens[5].c_str()),  // Growth rate
+					atof(tokens[1].c_str()),  // X
+					atof(tokens[2].c_str())); // Y
+			planets_.push_back(p);
 
-        } else if (tokens[0] == "F") {
-            if (tokens.size() != 7) {
-                return 0;
-            }
+		} else if (tokens[0] == "F") {
+			if (tokens.size() != 7) {
+				return 0;
+			}
 
-            Fleet* fleet = new Fleet();
-            fleet->SetOwner(atoi(tokens[1].c_str()));
-            fleet->SetNumShips(atoi(tokens[2].c_str()));
-            fleet_source_ids.push_back(atoi(tokens[3].c_str()));
-            fleet_destination_ids.push_back(atoi(tokens[4].c_str()));
-            fleet->SetTripLength(atoi(tokens[5].c_str()));
-            fleet->SetTurnsRemaining(atoi(tokens[6].c_str()));
+			Fleet* fleet = new Fleet();
+			fleet->SetOwner(atoi(tokens[1].c_str()));
+			fleet->SetNumShips(atoi(tokens[2].c_str()));
+			fleet_source_ids.push_back(atoi(tokens[3].c_str()));
+			fleet_destination_ids.push_back(atoi(tokens[4].c_str()));
+			fleet->SetTripLength(atoi(tokens[5].c_str()));
+			fleet->SetTurnsRemaining(atoi(tokens[6].c_str()));
 
-            fleets_.push_back(fleet);
+			fleets_.push_back(fleet);
 
-        } else {
-            return 0;
-        }
-    }
+		} else {
+			return 0;
+		}
+	}
 
-    //Pre-calculate the distances between the planets.
-    num_planets_ = static_cast<int>(planets_.size());
-    planet_distances_.reserve(num_planets_ * num_planets_);
+	//Pre-calculate the distances between the planets.
+	num_planets_ = static_cast<int>(planets_.size());
+	planet_distances_.reserve(num_planets_ * num_planets_);
 
-    for (int origin = 0; origin < num_planets_; ++origin) {
-        for (int destination = 0; destination < num_planets_; ++destination) {
-            const double dx = planets_[origin]->X() - planets_[destination]->X();
-            const double dy = planets_[origin]->Y() - planets_[destination]->Y();
+	for (int origin = 0; origin < num_planets_; ++origin) {
+		for (int destination = 0; destination < num_planets_; ++destination) {
+			const double dx = planets_[origin]->X() - planets_[destination]->X();
+			const double dy = planets_[origin]->Y() - planets_[destination]->Y();
 
-            const int distance = static_cast<int>(ceil(sqrt(dx * dx + dy * dy)));
+			const int distance = static_cast<int>(ceil(sqrt(dx * dx + dy * dy)));
 
-            planet_distances_.push_back(distance);
-        }
-    }
+			planet_distances_.push_back(distance);
+		}
+	}
 
-    /*//Resolve planet references within the fleets and assign fleets
+	/*//Resolve planet references within the fleets and assign fleets
     //to their destinations.
     fleets_by_destination_.resize(planets_.size());
 
@@ -446,87 +481,93 @@ int PlanetWars::Initialize(const std::string& s) {
         fleets_by_destination_[destination_id].push_back(fleet);
     }*/
 
-    //Pre-sort planets by distance from each other.
-    //Use a functor defined immediately before this function.
-    DistanceComparer distance_comparer;
-    distance_comparer.planet_wars_ = this;
-    distance_comparer.origin_id = 0;
+	//Pre-sort planets by distance from each other.
+	//Use a functor defined immediately before this function.
+	DistanceComparer distance_comparer;
+	distance_comparer.planet_wars_ = this;
+	distance_comparer.origin_id = 0;
 
-    planets_by_distance_.clear();
-    planets_by_distance_.reserve(num_planets_ * num_planets_);
+	planets_by_distance_.clear();
+	planets_by_distance_.reserve(num_planets_ * num_planets_);
 
-    for (planet_id = 0; planet_id < num_planets_; ++planet_id) {
-        //Sort the planets by distance from the origin planet and
-        //append the result to the general vector of planets sorted
-        //by distance.
-        std::vector<Planet*> planets_to_sort(planets_);
-        distance_comparer.origin_id = planet_id;
-        std::sort(planets_to_sort.begin(), planets_to_sort.end(), distance_comparer);
-        planets_by_distance_.insert(planets_by_distance_.end(),
-            planets_to_sort.begin(), planets_to_sort.end());
-    }
+	for (planet_id = 0; planet_id < num_planets_; ++planet_id) {
+		//Sort the planets by distance from the origin planet and
+		//append the result to the general vector of planets sorted
+		//by distance.
+		std::vector<Planet*> planets_to_sort(planets_);
+		distance_comparer.origin_id = planet_id;
+		std::sort(planets_to_sort.begin(), planets_to_sort.end(), distance_comparer);
+		planets_by_distance_.insert(planets_by_distance_.end(),
+				planets_to_sort.begin(), planets_to_sort.end());
+	}
 
-    return 1;
+	//Initialize the Planet To Colony Map object
+	for (unsigned int i = 0; i < planets_.size(); i++){
+		(*planetColony)[planets_[i]->PlanetID()] = -1;
+		(*neutralPlanetColony)[planets_[i]->PlanetID()] = -1;
+	}
+
+	return 1;
 }
 
 int PlanetWars::Update(const std::string& s) {
-    ++turn_;
+	++turn_;
 
-    //Update the planet data; repopulate the fleets.
-    fleets_.clear();
-    std::vector<std::string> lines = StringUtil::Tokenize(s, "\n");
-    int planet_id = 0;
+	//Update the planet data; repopulate the fleets.
+	fleets_.clear();
+	std::vector<std::string> lines = StringUtil::Tokenize(s, "\n");
+	int planet_id = 0;
 
-    std::vector<int> fleet_source_ids;
-    std::vector<int> fleet_destination_ids;
+	std::vector<int> fleet_source_ids;
+	std::vector<int> fleet_destination_ids;
 
-    for (unsigned int i = 0; i < lines.size(); ++i) {
-        std::string& line = lines[i];
-        size_t comment_begin = line.find_first_of('#');
-        if (comment_begin != std::string::npos) {
-            line = line.substr(0, comment_begin);
-        }
+	for (unsigned int i = 0; i < lines.size(); ++i) {
+		std::string& line = lines[i];
+		size_t comment_begin = line.find_first_of('#');
+		if (comment_begin != std::string::npos) {
+			line = line.substr(0, comment_begin);
+		}
 
-        std::vector<std::string> tokens = StringUtil::Tokenize(line);
-        if (tokens.size() == 0) {
-            continue;
-        }
+		std::vector<std::string> tokens = StringUtil::Tokenize(line);
+		if (tokens.size() == 0) {
+			continue;
+		}
 
-        if (tokens[0] == "P") {
-            //Read a line describing a planet
-            if (tokens.size() != 6) {
-                return 0;
-            }
+		if (tokens[0] == "P") {
+			//Read a line describing a planet
+			if (tokens.size() != 6) {
+				return 0;
+			}
 
-            //Update the planet state.
-            Planet* planet = planets_[planet_id];
-            planet->Owner(atoi(tokens[3].c_str()));
-            planet->NumShips(atoi(tokens[4].c_str()));
+			//Update the planet state.
+			Planet* planet = planets_[planet_id];
+			planet->Owner(atoi(tokens[3].c_str()));
+			planet->NumShips(atoi(tokens[4].c_str()));
 
-            planet_id++;
+			planet_id++;
 
-        } else if (tokens[0] == "F") {
-            //Read a line describing a fleet
-            if (tokens.size() != 7) {
-                return 0;
-            }
+		} else if (tokens[0] == "F") {
+			//Read a line describing a fleet
+			if (tokens.size() != 7) {
+				return 0;
+			}
 
-            Fleet* fleet = new Fleet();
-            fleet->SetOwner(atoi(tokens[1].c_str()));
-            fleet->SetNumShips(atoi(tokens[2].c_str()));
-            fleet_source_ids.push_back(atoi(tokens[3].c_str()));
-            fleet_destination_ids.push_back(atoi(tokens[4].c_str()));
-            fleet->SetTripLength(atoi(tokens[5].c_str()));
-            fleet->SetTurnsRemaining(atoi(tokens[6].c_str()));
+			Fleet* fleet = new Fleet();
+			fleet->SetOwner(atoi(tokens[1].c_str()));
+			fleet->SetNumShips(atoi(tokens[2].c_str()));
+			fleet_source_ids.push_back(atoi(tokens[3].c_str()));
+			fleet_destination_ids.push_back(atoi(tokens[4].c_str()));
+			fleet->SetTripLength(atoi(tokens[5].c_str()));
+			fleet->SetTurnsRemaining(atoi(tokens[6].c_str()));
 
-            fleets_.push_back(fleet);
+			fleets_.push_back(fleet);
 
-        } else {
-            return 0;
-        }
-    }
+		} else {
+			return 0;
+		}
+	}
 
-    /*//Clear the fleets sorted by destination.
+	/*//Clear the fleets sorted by destination.
     for (uint i = 0; i < fleets_by_destination_.size(); ++i) {
         fleets_by_destination_[i].clear();
     }
@@ -543,7 +584,7 @@ int PlanetWars::Update(const std::string& s) {
         fleets_by_destination_[destination_id].push_back(fleet);
     }*/
 
-    return 1;
+	return 1;
 }
 
 void PlanetWars::FinishTurn() const {

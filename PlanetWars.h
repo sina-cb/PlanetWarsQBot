@@ -8,6 +8,9 @@
 
 #include <string>
 #include <vector>
+#include <map>
+#include <algorithm>
+#include "Logger.cpp"
 
 enum Players{
 	NEUTRAL = 0, ME = 1, ENEMY = 2
@@ -208,6 +211,7 @@ public:
 	PlanetList NClosestPlanets(int source_id, int n) const;
 	PlanetList NClosestMinePlanets(int source_id, int n) const;
 	PlanetList NClosestEnemyPlanets(int source_id, int n) const;
+	PlanetList NClosestNeutralPlanets(int source_id, int n) const;
 
 	// Sends an order to the game engine. The order is to send num_ships ships
 	// from source_planet to destination_planet. The order must be valid, or
@@ -236,6 +240,10 @@ public:
 
 	int Turn() const {return turn_;}
 
+	std::map<int, int>* PlanetColony() const {return planetColony;}
+
+	std::map<int, int>* NeutralPlanetColony() const {return neutralPlanetColony;}
+
 private:
 	// Parses a game state from a string. On success, returns 1. On failure,
 	// returns 0.
@@ -255,9 +263,12 @@ private:
     //element (source_id * num_planets) and ends at ((source_id+1) * num_planets - 1).
 	PlanetList planets_by_distance_;
 
+	std::map<int, int> *planetColony;
+	std::map<int, int> *neutralPlanetColony;
 	int num_planets_;
-
 	int turn_;
+
+	Logger *logger;
 };
 
 #endif

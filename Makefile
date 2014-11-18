@@ -2,7 +2,7 @@ CC=g++
 CFLAGS=-c -Wall -I/usr/include/boost
 LIBS=-lboost_thread 
 LDFLAGS=-L/usr/lib/ $(LIBS)
-SOURCES=QBot.cc PlanetWars.cc Colony.cpp CentralGovernment.cpp
+SOURCES=QBot.cc PlanetWars.cc Colony.cpp CentralGovernment.cpp Logger.cpp
 OBJECTS=$(SOURCES:.cpp=.o)
 EXECUTABLE=QBot.bin
 
@@ -18,4 +18,4 @@ debug: $(SOURCES) $(EXECUTABLE)
 	$(CC) $(CFLAGS) $< -o $@
 	
 clean:
-	rm -rf *.o QBot
+	rm -rf *.o QBot.bin *.log

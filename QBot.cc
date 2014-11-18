@@ -21,9 +21,9 @@ int main(int argc, char *argv[]) {
 		current_line += (char) c;
 		if (c == '\n') {
 			if (current_line.length() >= 2 && current_line.substr(0, 2) == "go") {
-				turn ++;
+				turn++;
 
-				if (1 == turn) {
+				if (turn == 1) {
 					pw.Initialize(map_data);
 
 				} else {

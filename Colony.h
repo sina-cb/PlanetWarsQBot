@@ -10,6 +10,11 @@
 
 #include "PlanetWars.h"
 #include <vector>
+#include "Logger.cpp"
+
+#define COLONY_MAX_SIZE 3
+#define COLONY_MAX_NEIGHBORS_FOR_EACH_PLANET 3
+#define COLONY_MAX_NEIGHBORS 5
 
 class Colony {
 public:
@@ -19,17 +24,28 @@ public:
 	void DoTurn(const PlanetWars &pw);
 
 	bool IfNeedUpdate();
+	int ID();
 	void NeedUpdate();
 	void DoNotNeedUpdate();
 
-	void addNeighbor(Planet *planet);
+	bool addNeighbor(Planet *planet);
+	bool addPlanet(Planet *planet);
+	bool removePlanet(Planet *planet);
+	bool removeNeighbor(Planet *planet);
+
+	int* Planets() {return planets;}
+	int* Neighbors() {return neighbors;}
+
+	int PlanetsCount();
+	int NeighborsCount();
 
 private:
 	int id;
-	std::vector<Planet*> planets;
-	std::vector<Planet*> neighbors;
+	int planets[COLONY_MAX_SIZE];
+	int neighbors[COLONY_MAX_NEIGHBORS];
 	std::vector<Fleet*> fleets;
-	bool changed;
+
+	Logger *logger;
 };
 
 #endif /* COLONY_H_ */

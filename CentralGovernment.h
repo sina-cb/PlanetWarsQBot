@@ -10,6 +10,7 @@
 
 #include "PlanetWars.h"
 #include "Colony.h"
+#include "Logger.cpp"
 #include <boost/thread.hpp>
 #include <vector>
 
@@ -20,6 +21,7 @@ public:
 	void DoTurn(const PlanetWars &pw);
 
 private:
+	Logger *logger;
 	std::vector<Colony*> colonies;
 
 	void UpdateColonies(const PlanetWars &pw);
