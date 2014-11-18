@@ -14,6 +14,8 @@ int main(int argc, char *argv[]) {
 	std::string current_line;
 	std::string map_data;
 
+	PlanetWars pw;
+
 	while (true) {
 		int c = std::cin.get();
 		current_line += (char) c;
@@ -21,7 +23,12 @@ int main(int argc, char *argv[]) {
 			if (current_line.length() >= 2 && current_line.substr(0, 2) == "go") {
 				turn ++;
 
-				PlanetWars pw(map_data);
+				if (1 == turn) {
+					pw.Initialize(map_data);
+
+				} else {
+					pw.Update(map_data);
+				}
 				map_data = "";
 
 				federal.DoTurn(pw);

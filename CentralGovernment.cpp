@@ -34,9 +34,9 @@ void CentralGovernment::UpdateColonies(const PlanetWars &pw){
 	for (unsigned int i = 0; i < colonies.size(); i++){
 		if (colonies[i]->IfNeedUpdate()){
 
-			vector<Planet> no_mine = pw.NotMyPlanets();
+			PlanetList no_mine = pw.NotMyPlanets();
 			for (unsigned int j = 0; j < no_mine.size() / 4; j++){
-				colonies[i]->addNeighbor(&no_mine[i]);
+				colonies[i]->addNeighbor(no_mine[i]);
 			}
 			colonies[i]->DoNotNeedUpdate();
 		}

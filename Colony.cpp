@@ -37,26 +37,26 @@ void Colony::DoTurn(const PlanetWars &pw) {
 	int source = -1;
 	double source_score = -999999.0;
 	int source_num_ships = 0;
-	std::vector<Planet> my_planets = pw.MyPlanets();
+	PlanetList my_planets = pw.MyPlanets();
 	for (unsigned int i = 0; i < planets.size(); ++i) {
-		const Planet& p = my_planets[i];
-		double score = (double) p.NumShips();
+		const Planet* p = my_planets[i];
+		double score = (double) p->NumShips();
 		if (score > source_score) {
 			source_score = score;
-			source = p.PlanetID();
-			source_num_ships = p.NumShips();
+			source = p->PlanetID();
+			source_num_ships = p->NumShips();
 		}
 	}
 	// (3) Find the weakest enemy or neutral planet.
 	int dest = -1;
 	double dest_score = -999999.0;
-	std::vector<Planet> not_my_planets = pw.NotMyPlanets();
+	PlanetList not_my_planets = pw.NotMyPlanets();
 	for (unsigned int i = 0; i < neighbors.size(); ++i) {
-		const Planet& p = not_my_planets[i];
-		double score = 1.0 / (1 + p.NumShips());
+		const Planet* p = not_my_planets[i];
+		double score = 1.0 / (1 + p->NumShips());
 		if (score > dest_score) {
 			dest_score = score;
-			dest = p.PlanetID();
+			dest = p->PlanetID();
 		}
 	}
 	// (4) Send half the ships from my strongest planet to the weakest
