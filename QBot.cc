@@ -8,6 +8,7 @@ using namespace std;
 // game engine for you. You don't have to understand or change the code below.
 int main(int argc, char *argv[]) {
 
+
 	CentralGovernment federal;
 	int turn = 0;
 
