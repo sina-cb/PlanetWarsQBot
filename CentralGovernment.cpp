@@ -18,13 +18,50 @@ CentralGovernment::~CentralGovernment() {
 
 }
 
+void CentralGovernment::Initialize(const PlanetWars &pw){
+
+	PlanetList planets = pw.Planets();
+	map<int, int> &planetToColony = *pw.PlanetColony();
+
+	for (size_t i = 0; i < planets.size(); i++){
+		planetToColony[planets[i]->PlanetID()] = -1;
+	}
+
+	size_t index = 0;
+	int colonyID = 1;
+	while (index < planets.size()){
+		if (planetToColony[planets[index]->PlanetID()] != -1){
+			index++;
+			continue;
+		}
+
+		Colony *colony = new Colony(colonyID);
+		colony->addPlanet(planets[index], pw);
+
+		PlanetList nearestPlanets = pw.NClosestPlanets(planets[index]->PlanetID(), planets.size());
+		for (size_t j = 0; j < nearestPlanets.size() && colony->Size() < COLONY_MAX_SIZE; j++){
+			if (planetToColony[nearestPlanets[j]->PlanetID()] == -1){
+				colony->addPlanet(nearestPlanets[j], pw);
+			}
+		}
+		colonies.push_back(colony);
+		colonyID++;
+	}
+
+	sprintf(logger->buffer, "Colonies Size: %d", (int)colonies.size());
+	logger->log();
+	for (size_t i = 0; i < colonies.size(); i++){
+		sprintf(logger->buffer, "Colony %d: %d, %d, %d, %d", i + 1, colonies[i]->Planets()[0],
+				colonies[i]->Planets()[1], colonies[i]->Planets()[2], colonies[i]->Planets()[3]);
+		logger->log();
+	}
+}
+
 void CentralGovernment::DoTurn(const PlanetWars &pw){
-	UpdateColonies(pw);
 	HandleColonies(pw);
 }
 
 void CentralGovernment::HandleColonies(const PlanetWars &pw){
-
 	vector<boost::thread*> thread_array;
 
 	for (size_t i = 0; i < colonies.size(); i++){
@@ -39,11 +76,10 @@ void CentralGovernment::HandleColonies(const PlanetWars &pw){
 		sprintf(logger->buffer, "End thread %d", i);
 		logger->log();
 	}
-
 }
 
 void CentralGovernment::UpdateColonies(const PlanetWars &pw){
-	PlanetList enemyPlanets = pw.EnemyPlanets();
+	/*PlanetList enemyPlanets = pw.EnemyPlanets();
 	PlanetList myPlanets = pw.MyPlanets();
 
 	std::map<int, int> &planetColony = *pw.PlanetColony();
@@ -78,8 +114,8 @@ void CentralGovernment::UpdateColonies(const PlanetWars &pw){
 		neutralPlanetColony[myPlanets[i]->PlanetID()] = -1;
 	}
 
-	/*sprintf(logger->buffer, "Planets count: %d", myPlanets.size());
-	logger->log();*/
+	sprintf(logger->buffer, "Planets count: %d", myPlanets.size());
+	logger->log();
 
 	for (size_t i = 0; i < myPlanets.size(); i++){
 		Planet *planet = myPlanets[i];
@@ -89,8 +125,8 @@ void CentralGovernment::UpdateColonies(const PlanetWars &pw){
 			continue;
 		}
 
-		/*sprintf(logger->buffer, "Colonies Count Before Adding New Planet: %d", colonies.size());
-		logger->log();*/
+		sprintf(logger->buffer, "Colonies Count Before Adding New Planet: %d", colonies.size());
+		logger->log();
 
 		// Try to find the nearest colony to the planet we have
 		PlanetList ourNearestPlanets = pw.NClosestMinePlanets(planet->PlanetID(), pw.Planets().size() - 1);
@@ -108,8 +144,8 @@ void CentralGovernment::UpdateColonies(const PlanetWars &pw){
 			colonyIndex = colonies.size() - 1;
 		}
 
-		/*		sprintf(logger->buffer, "Colonies Count After Adding New Planet: %d", colonies.size());
-		logger->log();*/
+				sprintf(logger->buffer, "Colonies Count After Adding New Planet: %d", colonies.size());
+		logger->log();
 
 		colonies[colonyIndex]->addPlanet(planet);
 
@@ -124,6 +160,5 @@ void CentralGovernment::UpdateColonies(const PlanetWars &pw){
 					neutralPlanetColony[n_nearest_neutral_planets[j]->PlanetID()] = colonyIndex;
 			}
 		}
-	}
-
+	}*/
 }

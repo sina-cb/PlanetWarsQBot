@@ -19,9 +19,11 @@ public:
 	CentralGovernment();
 	virtual ~CentralGovernment();
 	void DoTurn(const PlanetWars &pw);
+	void Initialize(const PlanetWars &pw);
 
 private:
 	Logger *logger;
+
 	std::vector<Colony*> colonies;
 
 	void UpdateColonies(const PlanetWars &pw);

@@ -12,9 +12,7 @@
 #include <vector>
 #include "Logger.cpp"
 
-#define COLONY_MAX_SIZE 3
-#define COLONY_MAX_NEIGHBORS_FOR_EACH_PLANET 3
-#define COLONY_MAX_NEIGHBORS 5
+#define COLONY_MAX_SIZE 4
 
 class Colony {
 public:
@@ -25,16 +23,13 @@ public:
 
 	bool IfNeedUpdate();
 	int ID();
+	int Size();
 	void NeedUpdate();
 	void DoNotNeedUpdate();
 
-	bool addNeighbor(Planet *planet);
-	bool addPlanet(Planet *planet);
+	bool addPlanet(Planet *planet, const PlanetWars &pw);
 	bool removePlanet(Planet *planet);
-	bool removeNeighbor(Planet *planet);
-
 	int* Planets() {return planets;}
-	int* Neighbors() {return neighbors;}
 
 	int PlanetsCount();
 	int NeighborsCount();
@@ -42,7 +37,7 @@ public:
 private:
 	int id;
 	int planets[COLONY_MAX_SIZE];
-	int neighbors[COLONY_MAX_NEIGHBORS];
+	int size;
 	std::vector<Fleet*> fleets;
 
 	Logger *logger;

@@ -8,7 +8,6 @@ using namespace std;
 // game engine for you. You don't have to understand or change the code below.
 int main(int argc, char *argv[]) {
 
-
 	CentralGovernment federal;
 	int turn = 0;
 
@@ -26,6 +25,7 @@ int main(int argc, char *argv[]) {
 
 				if (turn == 1) {
 					pw.Initialize(map_data);
+					federal.Initialize(pw);
 
 				} else {
 					pw.Update(map_data);
@@ -33,7 +33,6 @@ int main(int argc, char *argv[]) {
 				map_data = "";
 
 				federal.DoTurn(pw);
-
 				pw.FinishTurn();
 			} else {
 				map_data += current_line;

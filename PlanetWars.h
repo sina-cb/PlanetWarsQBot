@@ -242,8 +242,6 @@ public:
 
 	std::map<int, int>* PlanetColony() const {return planetColony;}
 
-	std::map<int, int>* NeutralPlanetColony() const {return neutralPlanetColony;}
-
 private:
 	// Parses a game state from a string. On success, returns 1. On failure,
 	// returns 0.
@@ -258,13 +256,12 @@ private:
 
 	std::vector<int> planet_distances_;
 
-    //Lists of planets sorted by distance from each other.
-    //A list of planets sorted by distance from source_id starts at
-    //element (source_id * num_planets) and ends at ((source_id+1) * num_planets - 1).
+	//Lists of planets sorted by distance from each other.
+	//A list of planets sorted by distance from source_id starts at
+	//element (source_id * num_planets) and ends at ((source_id+1) * num_planets - 1).
 	PlanetList planets_by_distance_;
 
 	std::map<int, int> *planetColony;
-	std::map<int, int> *neutralPlanetColony;
 	int num_planets_;
 	int turn_;
 

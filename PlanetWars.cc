@@ -111,7 +111,6 @@ PlanetWars::PlanetWars() {
 	turn_ = 0;
 	num_planets_ = -1;
 	planetColony = new std::map<int, int>();
-	neutralPlanetColony = new std::map<int, int>();
 }
 
 int PlanetWars::NumPlanets() const {
@@ -499,12 +498,6 @@ int PlanetWars::Initialize(const std::string& s) {
 		std::sort(planets_to_sort.begin(), planets_to_sort.end(), distance_comparer);
 		planets_by_distance_.insert(planets_by_distance_.end(),
 				planets_to_sort.begin(), planets_to_sort.end());
-	}
-
-	//Initialize the Planet To Colony Map object
-	for (unsigned int i = 0; i < planets_.size(); i++){
-		(*planetColony)[planets_[i]->PlanetID()] = -1;
-		(*neutralPlanetColony)[planets_[i]->PlanetID()] = -1;
 	}
 
 	return 1;
