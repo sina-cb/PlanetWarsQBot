@@ -19,3 +19,6 @@ debug: $(SOURCES) $(EXECUTABLE)
 	
 clean:
 	rm -rf *.o QBot.bin *.log
+
+clean_logs:
+	rm -rf *.log
