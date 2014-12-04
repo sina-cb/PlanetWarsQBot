@@ -19,20 +19,25 @@ public:
 	Colony();
 	Colony(int id);
 	virtual ~Colony();
+
+	/**
+	 * Runs Q-Learning at the Planet Level, to find the destination planet to attack
+	 */
 	void DoTurn(const PlanetWars &pw);
 
-	bool IfNeedUpdate();
-	int ID();
-	int Size();
-	void NeedUpdate();
-	void DoNotNeedUpdate();
+	/**
+	 * This function should be run at the beginning of each turn to update the colony
+	 * parameters.
+	 */
+	void UpdateColony(const PlanetWars &pw);
 
 	bool addPlanet(Planet *planet, const PlanetWars &pw);
 	bool removePlanet(Planet *planet);
-	int* Planets() {return planets;}
 
-	int PlanetsCount();
-	int NeighborsCount();
+	int ID();
+	int Size();
+
+	int* Planets() {return planets;}
 
 private:
 	int id;

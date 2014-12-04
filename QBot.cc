@@ -25,7 +25,7 @@ int main(int argc, char *argv[]) {
 
 				if (turn == 1) {
 					pw.Initialize(map_data);
-					federal.Initialize(pw);
+					federal.InitializeColonies(pw);
 
 				} else {
 					pw.Update(map_data);

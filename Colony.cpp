@@ -76,31 +76,7 @@ bool Colony::addPlanet(Planet *planet, const PlanetWars &pw){
 }
 
 bool Colony::removePlanet(Planet* planet){
-	bool result = false;
-	sprintf(logger->buffer, "Planets Before Remove: %d\t%d\t%d", planets[0], planets[1], planets[2]);
-	logger->log();
-	for (size_t i = 0; i < COLONY_MAX_SIZE; i++){
-		if (planets[i] == planet->PlanetID()){
-			planets[i] = -1;
-			result = true;
-			break;
-		}
-	}
-	sprintf(logger->buffer, "Planets After Remove: %d\t%d\t%d", planets[0], planets[1], planets[2]);
-	logger->log();
-	sprintf(logger->buffer, "Remove Planet %d ID = %d\n", PlanetsCount(), planet->PlanetID());
-	logger->log();
-	return result;
-}
-
-int Colony::PlanetsCount(){
-	int count = 0;
-	for (size_t i = 0; i < COLONY_MAX_SIZE; i++){
-		if (planets[i] != -1){
-			count++;
-		}
-	}
-	return count;
+	return false;
 }
 
 int Colony::ID(){
