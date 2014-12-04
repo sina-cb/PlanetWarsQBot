@@ -55,7 +55,7 @@ private:
 	 */
 	void HandleColonies(const PlanetWars &pw);
 
-	int* q_values;
+	double* q_values;
 	int num_q_values;
 
 	int dimension;
@@ -65,16 +65,18 @@ private:
 
 	class Action{
 	public:
-		Action(int source, int destication){
+		Action(int source, int destication, int ID){
 			this->source = source;
 			this->destination = destication;
+			this->ID = ID;
 		}
 
 		int source;
 		int destination;
+		int ID;
 	};
 
-	inline int get_index_for(int* indexes){
+	inline int get_index_for(std::vector<int> indexes){
 		int temp = 1;
 		int result = 0;
 		for (size_t i = 1; i < dimension; i++){

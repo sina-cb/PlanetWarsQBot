@@ -37,6 +37,7 @@ public:
 	int ID();
 	int Size();
 	int Strongness();
+	bool HasFriendlyPlanet(const PlanetWars &pw);
 
 	int* Planets() {return planets;}
 

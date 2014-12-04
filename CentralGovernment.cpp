@@ -29,7 +29,24 @@ void CentralGovernment::DoTurn(const PlanetWars &pw){
 void CentralGovernment::HandleColonies(const PlanetWars &pw){
 	//Start Q-learning
 
+	double max_q = -99999999;
+	Action* max_action = 0;
 
+	for (size_t i = 0; i < actions.size(); i++){
+
+		vector<int> indexes;
+		for (size_t j = 0; j < colonies.size(); j++){
+			indexes.push_back(colonies[j]->Strongness());
+		}
+		indexes.push_back(actions[i]->ID);
+
+		if (colonies[actions[i]->source]->HasFriendlyPlanet(pw) && q_values[get_index_for(indexes)] > max_q){
+			max_q = q_values[get_index_for(indexes)];
+			max_action = actions[i];
+		}
+	}
+
+	colonies[max_action->source]->DoTurn(pw, colonies[max_action->destination]);
 
 }
 
@@ -73,14 +90,14 @@ void CentralGovernment::ReadQValues(){
 	sprintf(logger->buffer, "Q-Value array size: %d", num_q_values);
 	logger->log();
 
-	q_values = new int[num_q_values];
+	q_values = new double[num_q_values];
 
 	if (!file_check){
 		//Initialize the Q-Values
 		sprintf(logger->buffer, "Q-Values file does not exist.");
 		logger->log();
 		for (size_t i = 0; i < num_q_values; i++){
-			q_values[i] = 0;
+			q_values[i] = 0.0;
 		}
 	}else{
 		//Read from file and store in array
@@ -126,9 +143,11 @@ void CentralGovernment::InitializeColonies(const PlanetWars &pw){
 		logger->log();
 	}
 
+	int count = 0;
 	for (size_t i = 0; i < colonies.size(); i++){
 		for (size_t j = 0; j < colonies.size(); j++){
-			Action *action = new Action(i, j);
+			Action *action = new Action(i, j, count);
+			count++;
 			actions.push_back(action);
 		}
 	}

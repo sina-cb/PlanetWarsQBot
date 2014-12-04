@@ -43,23 +43,33 @@ void Colony::DoTurn(const PlanetWars &pw, Colony *destination) {
 		return;
 	}
 	// (2) Find my strongest planet.
-	int source = pw.MyPlanets()[0]->PlanetID();
+	int source = 0;
+	for (size_t i = 0; i < size; i++){
+		if (pw.GetPlanet(planets[i])->Owner() == ME){
+			source = planets[i];
+			break;
+		}
+	}
 
 	// (3) Find the weakest enemy or neutral planet.
-	int dest = 4;
+	int dest = 0;
+	for (size_t i = 0; i < destination->Size(); i++){
+		if (pw.GetPlanet(destination->Planets()[i])->Owner() == ENEMY ||
+				pw.GetPlanet(destination->Planets()[i])->Owner() == NEUTRAL){
+			dest = destination->Planets()[i];
+			break;
+		}
+		sprintf(logger->buffer, "Owner: %d Size: %d", pw.GetPlanet(planets[i])->Owner(), size);
+		logger->log();
+	}
 
 	// (4) Send half the ships from my strongest planet to the weakest
 	// planet that I do not own.
-	if (source >= 0 && dest >= 0 && ID() == 1) {
-		int num_ships = pw.MyPlanets()[0]->NumShips() / 2;
-
-		//LOCK
-
+	if (source >= 0 && dest >= 0) {
+		int num_ships = pw.GetPlanet(source)->NumShips() / 2;
 		pw.IssueOrder(source, dest, num_ships);
-		//UNLOCK
-
-		sprintf(logger->buffer, "Source: %d, Dest.: %d ", source, dest);
-			logger->log();
+		sprintf(logger->buffer, "Source: %d, Dest.: %d Ships: %d", source, dest, num_ships);
+		logger->log();
 	}
 
 	sprintf(logger->buffer, "TURN END: %d ", ID());
@@ -84,6 +94,15 @@ void Colony::UpdateColony(const PlanetWars &pw){
 			eligable[i] = true;
 		}
 	}
+
+	//Discretization of strongness parameter
+	if (strongness < MIN_STRONGNESS){
+		strongness = MIN_STRONGNESS;
+	}else if (strongness >= MAX_STRONGNESS){
+		strongness = MAX_STRONGNESS;
+	}
+
+	strongness = (strongness - MIN_STRONGNESS) / STEPS;
 
 	//TODO: We haven't updated the colonyType variable, if you needed it, update it! :D
 }
@@ -121,4 +140,13 @@ int Colony::Size(){
 
 int Colony::Strongness(){
 	return strongness;
+}
+
+bool Colony::HasFriendlyPlanet(const PlanetWars &pw){
+	for (size_t i = 0; i < size; i++){
+		if (pw.GetPlanet(planets[i])->Owner() == ME){
+			return true;
+		}
+	}
+	return false;
 }
