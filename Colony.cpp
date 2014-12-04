@@ -21,6 +21,8 @@ Colony::Colony(int id){
 		planets[i] = -1;
 	}
 	size = 0;
+
+	attackThreshold = 30;
 }
 
 Colony::~Colony() {
@@ -32,8 +34,7 @@ Colony::~Colony() {
 // that currently exist. Inside this function, you issue orders using the
 // pw.IssueOrder() function. For example, to send 10 ships from planet 3 to
 // planet 8, you would say pw.IssueOrder(3, 8, 10).
-void Colony::DoTurn(const PlanetWars &pw) {
-
+void Colony::DoTurn(const PlanetWars &pw, Colony *destination) {
 	sprintf(logger->buffer, "TURN START: %d ", ID());
 	logger->log();
 
@@ -65,6 +66,28 @@ void Colony::DoTurn(const PlanetWars &pw) {
 	logger->log();
 }
 
+void Colony::UpdateColony(const PlanetWars &pw){
+	strongness = 0;
+	for (size_t i = 0; i < size; i++){
+		const Planet *planet = pw.GetPlanet(planets[i]);
+		if (planet->Owner() == ME){
+			strongness += planet->GrowthRate() * planet->NumShips();
+		}else if(planet->Owner() == ENEMY){
+			strongness -= planet->GrowthRate() * planet->NumShips();
+		}else if(planet->Owner() == NEUTRAL){
+			strongness -= planet->NumShips();
+		}
+
+		if (planet->GrowthRate() * planet->NumShips() < attackThreshold){
+			eligable[i] = false;
+		}else{
+			eligable[i] = true;
+		}
+	}
+
+	//TODO: We haven't updated the colonyType variable, if you needed it, update it! :D
+}
+
 bool Colony::addPlanet(Planet *planet, const PlanetWars &pw){
 	map<int, int> &planetToColony = *pw.PlanetColony();
 
@@ -73,6 +96,15 @@ bool Colony::addPlanet(Planet *planet, const PlanetWars &pw){
 	size++;
 
 	return true;
+}
+
+bool Colony::IfPlanetHere(const PlanetWars &pw, int planetID){
+	for (size_t i = 0; i < size; i++){
+		if (pw.GetPlanet(planets[i])->PlanetID() == planetID){
+			return true;
+		}
+	}
+	return false;
 }
 
 bool Colony::removePlanet(Planet* planet){
@@ -85,4 +117,8 @@ int Colony::ID(){
 
 int Colony::Size(){
 	return size;
+}
+
+int Colony::Strongness(){
+	return strongness;
 }
