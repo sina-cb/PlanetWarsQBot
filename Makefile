@@ -22,3 +22,9 @@ clean:
 
 clean_logs:
 	rm -rf *.log
+
+clean_q:
+	rm -rf *.q
+
+clean_everything:
+	rm -rf *.o QBot.bin *.log *.q

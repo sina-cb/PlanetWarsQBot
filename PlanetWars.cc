@@ -269,7 +269,7 @@ FleetList PlanetWars::MyFleets() const {
 	FleetList r;
 	for (int i = 0; i < fleets_.size(); ++i) {
 		Fleet* f = fleets_[i];
-		if (f->Owner() == 1) {
+		if (f->Owner() == ME) {
 			r.push_back(f);
 		}
 	}
@@ -338,16 +338,18 @@ void PlanetWars::IssueOrder(int source_planet, int destination_planet,
 }
 
 bool PlanetWars::IsAlive(int player_id) const {
-	for (unsigned int i = 0; i < planets_.size(); ++i) {
+	for (size_t i = 0; i < planets_.size(); ++i) {
 		if (planets_[i]->Owner() == player_id) {
+			sprintf(logger->buffer, "Alive");
+			logger->log();
 			return true;
 		}
 	}
-	for (unsigned int i = 0; i < fleets_.size(); ++i) {
+	/*for (size_t i = 0; i < fleets_.size(); ++i) {
 		if (fleets_[i]->Owner() == player_id) {
 			return true;
 		}
-	}
+	}*/
 	return false;
 }
 

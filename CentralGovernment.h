@@ -47,6 +47,7 @@ private:
 	void UpdateColonies(const PlanetWars &pw);
 
 	void ReadQValues();
+	void WriteQValues();
 
 	/**
 	 * This function is used to do Q-learning at the Colony Level

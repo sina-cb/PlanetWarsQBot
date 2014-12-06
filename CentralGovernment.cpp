@@ -7,6 +7,7 @@
 
 #include "CentralGovernment.h"
 #include <map>
+#include <stdlib.h>     /* atof */
 
 using namespace std;
 
@@ -19,21 +20,28 @@ CentralGovernment::~CentralGovernment() {
 }
 
 void CentralGovernment::DoTurn(const PlanetWars &pw){
-
 	UpdateColonies(pw);
-
 	HandleColonies(pw);
-
 }
 
 void CentralGovernment::HandleColonies(const PlanetWars &pw){
 	//Start Q-learning
 
+	if (!pw.IsAlive(ME)){
+		sprintf(logger->buffer, "I am dead at turn %d: \n\tWriting Q-Values to file.", pw.Turn());
+		logger->log();
+
+		WriteQValues();
+
+		sprintf(logger->buffer, "\tWriting Q-Values complete.");
+		logger->log();
+
+		return;
+	}
+
 	double max_q = -99999999;
 	Action* max_action = 0;
-
 	for (size_t i = 0; i < actions.size(); i++){
-
 		vector<int> indexes;
 		for (size_t j = 0; j < colonies.size(); j++){
 			indexes.push_back(colonies[j]->Strongness());
@@ -46,15 +54,16 @@ void CentralGovernment::HandleColonies(const PlanetWars &pw){
 		}
 	}
 
-	colonies[max_action->source]->DoTurn(pw, colonies[max_action->destination]);
+	if (max_q == -99999999){
+		return;
+	}
 
+	colonies[max_action->source]->DoTurn(pw, colonies[max_action->destination]);
 }
 
 void CentralGovernment::UpdateColonies(const PlanetWars &pw){
 	for (size_t i = 0; i < colonies.size(); i++){
 		colonies[i]->UpdateColony(pw);
-		/*sprintf(logger->buffer, "Strongness Colony #%d: %d", colonies[i]->ID(), colonies[i]->Strongness());
-		logger->log();*/
 	}
 }
 
@@ -80,7 +89,8 @@ int CentralGovernment::Reward(const PlanetWars &pw, Action *action){
 }
 
 void CentralGovernment::ReadQValues(){
-	string file_name = "colony-q-values.q";
+	snprintf(logger->buffer, 100, "%s.q", MAP_NAME);
+	string file_name = logger->buffer;
 	bool file_check = check_file_exists(file_name);
 
 	num_q_values = 1;
@@ -96,14 +106,56 @@ void CentralGovernment::ReadQValues(){
 		//Initialize the Q-Values
 		sprintf(logger->buffer, "Q-Values file does not exist.");
 		logger->log();
+
+		ofstream out;
+		out.open (file_name.c_str());
+
 		for (size_t i = 0; i < num_q_values; i++){
+			char buffer[100];
+			sprintf(buffer, MAP_FORMAT, 0.0);
 			q_values[i] = 0.0;
+			out << buffer;
 		}
+		out.close();
+
+		sprintf(logger->buffer, "Q-Values file created.");
+		logger->log();
 	}else{
 		//Read from file and store in array
-		sprintf(logger->buffer, "Q-Values file exists - Not Read Yet!!!");
+		ifstream in;
+		in.open(file_name.c_str());
+		char inStr[100];
+
+		int index = 0;
+		while(!in.eof()){
+			in >> inStr;
+			q_values[index] = atof(inStr);
+		}
+		in.close();
+
+		sprintf(logger->buffer, "Q-Values loaded");
 		logger->log();
 	}
+}
+
+void CentralGovernment::WriteQValues(){
+	snprintf(logger->buffer, 100, "%s.q", MAP_NAME);
+	string file_name = logger->buffer;
+
+	if( remove(file_name.c_str()) != 0 )
+		perror( "Error deleting file" );
+	else
+		puts( "File successfully deleted" );
+
+	ofstream out;
+	out.open (file_name.c_str());
+
+	for (size_t i = 0; i < num_q_values; i++){
+		char buffer[100];
+		sprintf(buffer, MAP_FORMAT, q_values[i]);
+		out << buffer;
+	}
+	out.close();
 }
 
 void CentralGovernment::InitializeColonies(const PlanetWars &pw){
@@ -160,8 +212,13 @@ void CentralGovernment::InitializeColonies(const PlanetWars &pw){
 	lengths = new int[dimension];
 	sprintf(logger->buffer, "");
 	for (size_t i = 0; i < dimension - 1; i++){
-		lengths[i] = ((MAX_STRONGNESS - MIN_STRONGNESS) / STEPS);
-		sprintf(logger->buffer, "%s - %d", logger->buffer, lengths[i]);
+		if (i == 0){
+			lengths[i] = ((MAX_STRONGNESS - MIN_STRONGNESS) / STEPS);
+			sprintf(logger->buffer, "%s%d", logger->buffer, lengths[i]);
+		}else{
+			lengths[i] = ((MAX_STRONGNESS - MIN_STRONGNESS) / STEPS);
+			sprintf(logger->buffer, "%s - %d", logger->buffer, lengths[i]);
+		}
 	}
 	lengths[dimension - 1] = actions.size();
 	sprintf(logger->buffer, "%s - %d", logger->buffer, lengths[dimension - 1]);

@@ -38,38 +38,42 @@ void Colony::DoTurn(const PlanetWars &pw, Colony *destination) {
 	sprintf(logger->buffer, "TURN START: %d ", ID());
 	logger->log();
 
+	int num_my_fleets = pw.MyFleets().size();
+
 	// (1) If we currently have a fleet in flight, just do nothing.
-	if (pw.MyFleets().size() >= 2) {
+	if (num_my_fleets >= 5) {
 		return;
 	}
-	// (2) Find my strongest planet.
-	int source = 0;
+
+	// (2) Find my eligible planets to attack.
+	vector<int> sources;
 	for (size_t i = 0; i < size; i++){
-		if (pw.GetPlanet(planets[i])->Owner() == ME){
-			source = planets[i];
-			break;
+		const Planet* planet = pw.GetPlanet(planets[i]);
+		if (planet->Owner() == ME){
+			if (planet->NumShips() > ELIGIBILITY_THRESHOLD_PERCENT)
+				sources.push_back(planets[i]);
 		}
 	}
 
 	// (3) Find the weakest enemy or neutral planet.
-	int dest = 0;
+	int dest = -1;
 	for (size_t i = 0; i < destination->Size(); i++){
 		if (pw.GetPlanet(destination->Planets()[i])->Owner() == ENEMY ||
 				pw.GetPlanet(destination->Planets()[i])->Owner() == NEUTRAL){
 			dest = destination->Planets()[i];
 			break;
 		}
-		sprintf(logger->buffer, "Owner: %d Size: %d", pw.GetPlanet(planets[i])->Owner(), size);
-		logger->log();
 	}
 
-	// (4) Send half the ships from my strongest planet to the weakest
-	// planet that I do not own.
-	if (source >= 0 && dest >= 0) {
-		int num_ships = pw.GetPlanet(source)->NumShips() / 2;
-		pw.IssueOrder(source, dest, num_ships);
-		sprintf(logger->buffer, "Source: %d, Dest.: %d Ships: %d", source, dest, num_ships);
-		logger->log();
+	if (sources.size() > 0 && dest != -1){
+		// (4) Send half the ships from my strongest planet to the weakest
+		// planet that I do not own.
+		for (size_t i = 0; i < sources.size(); i++){
+			int num_ships = pw.GetPlanet(sources[i])->NumShips() / 2;
+			pw.IssueOrder(sources[i], dest, num_ships);
+			sprintf(logger->buffer, "Attack %d: Source: %d, Dest.: %d Ships: %d", (i + 1), sources[i], dest, num_ships);
+			logger->log();
+		}
 	}
 
 	sprintf(logger->buffer, "TURN END: %d ", ID());
