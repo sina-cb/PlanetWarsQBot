@@ -9,7 +9,9 @@
 //#define STEPS 500
 #define STEPS 800
 
+#define MAX_NUM_MY_FLEETS 2
 #define ELIGIBILITY_THRESHOLD_PERCENT 20
+
 //********************************************************//
 
 //********************************************************//

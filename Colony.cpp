@@ -41,7 +41,7 @@ void Colony::DoTurn(const PlanetWars &pw, Colony *destination) {
 	int num_my_fleets = pw.MyFleets().size();
 
 	// (1) If we currently have a fleet in flight, just do nothing.
-	if (num_my_fleets >= 5) {
+	if (num_my_fleets >= MAX_NUM_MY_FLEETS) {
 		return;
 	}
 
