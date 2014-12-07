@@ -40,45 +40,9 @@ void Colony::DoTurn(const PlanetWars &pw, Colony *destination) {
 
 	int num_my_fleets = pw.MyFleets().size();
 
-	// (1) If we currently have a fleet in flight, just do nothing.
-	if (num_my_fleets >= MAX_NUM_MY_FLEETS) {
-		return;
-	}
-
-	// (2) Find my eligible planets to attack.
-	vector<int> sources;
-	for (size_t i = 0; i < size; i++){
-		const Planet* planet = pw.GetPlanet(planets[i]);
-		if (planet->Owner() == ME){
-			if (planet->NumShips() > ELIGIBILITY_THRESHOLD_PERCENT)
-				sources.push_back(planets[i]);
-		}
-	}
-
-	// (3) Find the weakest enemy or neutral planet.
-	int dest = -1;
-	for (size_t i = 0; i < destination->Size(); i++){
-		if (pw.GetPlanet(destination->Planets()[i])->Owner() == ENEMY ||
-				pw.GetPlanet(destination->Planets()[i])->Owner() == NEUTRAL){
-			dest = destination->Planets()[i];
-			break;
-		}
-	}
-
-	if (sources.size() > 0 && dest != -1){
-		// (4) Send half the ships from my strongest planet to the weakest
-		// planet that I do not own.
-		for (size_t i = 0; i < sources.size(); i++){
-			int num_ships = pw.GetPlanet(sources[i])->NumShips() / 2;
-			pw.IssueOrder(sources[i], dest, num_ships);
-			sprintf(logger->buffer, "Attack %d: Source: %d, Dest.: %d Ships: %d", (i + 1), sources[i], dest, num_ships);
-			logger->log();
-		}
-	}
-
 	//**************************************************//
 
-	/*// (2) Find my eligible planets to attack.
+	// (2) Find my eligible planets to attack.
 	vector<int> sources;
 	for (size_t i = 0; i < size; i++){
 		const Planet* planet = pw.GetPlanet(planets[i]);
@@ -154,7 +118,7 @@ void Colony::DoTurn(const PlanetWars &pw, Colony *destination) {
 			sprintf(logger->buffer, "Attack %d: Source: %d, Dest.: %d Ships: %d", (i + 1), sources[i], max_action->destination, num_ships);
 			logger->log();
 		}
-	}*/
+	}
 
 	//**************************************************//
 
