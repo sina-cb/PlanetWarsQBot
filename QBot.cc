@@ -9,10 +9,15 @@ using namespace std;
 // game engine for you. You don't have to understand or change the code below.
 int main(int argc, char *argv[]) {
 
+	Logger *logger = new Logger("MAIN.log");
+
 	int iteration = 0;
-	if (argc == 1){
-		iteration = atoi(argv[0]);
+	if (argc == 2){
+		iteration = atoi(argv[1]);
 	}
+
+	sprintf(logger->buffer, "%d", argc);
+	logger->log();
 
 	CentralGovernment federal;
 	int turn = 0;
