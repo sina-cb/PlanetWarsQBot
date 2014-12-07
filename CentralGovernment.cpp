@@ -13,6 +13,7 @@ using namespace std;
 
 CentralGovernment::CentralGovernment() {
 	logger = new Logger("CentralGovernment.log");
+	game_finished = false;
 	srand(time(NULL));
 }
 
@@ -21,8 +22,14 @@ CentralGovernment::~CentralGovernment() {
 }
 
 void CentralGovernment::DoTurn(const PlanetWars &pw){
-	UpdateColonies(pw);
-	HandleColonies(pw);
+	if (!game_finished){
+		UpdateColonies(pw);
+		HandleColonies(pw);
+	}else{
+		pw.FinishTurn();
+		sprintf(logger->buffer, "Game has been finished!");
+		logger->log();
+	}
 }
 
 void CentralGovernment::HandleColonies(const PlanetWars &pw){
@@ -47,6 +54,8 @@ void CentralGovernment::HandleColonies(const PlanetWars &pw){
 
 		sprintf(logger->buffer, "\tWriting Q-Values complete.");
 		logger->log();
+
+		game_finished = true;
 
 		return;
 	}

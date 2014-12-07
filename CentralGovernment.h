@@ -41,6 +41,8 @@ private:
 	std::vector<Colony*> colonies;
 	std::vector<Action*> actions;
 
+	bool game_finished;
+
 	/**
 	 * Update Colony Parameters at the beginning of each Turn.
 	 */
