@@ -69,6 +69,15 @@ void CentralGovernment::HandleColonies(const PlanetWars &pw){
 }
 
 void CentralGovernment::CalculatedNewQValue(const PlanetWars &pw, int action_t){
+	double alpha = ALPHA_COLONY_Q;
+
+	if (pw.Iteration() != 0){
+		alpha = 1.0 / pw.Iteration();
+	}
+
+	sprintf(logger->buffer, "Alpha: %f", alpha);
+	logger->log();
+
 	vector<int> state;
 	for (size_t j = 0; j < colonies.size(); j++){
 		state.push_back(colonies[j]->Strongness());
@@ -101,7 +110,7 @@ void CentralGovernment::CalculatedNewQValue(const PlanetWars &pw, int action_t){
 		}
 	}
 
-	double q_new = ((1 - ALPHA_COLONY_Q) * q_old) + (ALPHA_COLONY_Q * (Reward(pw, actions[action_t]) + DISCOUNT_COLONY * max_est_q));
+	double q_new = ((1 - alpha) * q_old) + (alpha * (Reward(pw, actions[action_t]) + DISCOUNT_COLONY * max_est_q));
 	q_values[get_index_for(state)] = q_new;
 
 	sprintf(logger->buffer, "New Q Value: %f", q_new);

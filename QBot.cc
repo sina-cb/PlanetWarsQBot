@@ -1,6 +1,7 @@
 #include <iostream>
 #include "PlanetWars.h"
 #include "CentralGovernment.h"
+#include <stdlib.h>
 
 using namespace std;
 
@@ -8,13 +9,18 @@ using namespace std;
 // game engine for you. You don't have to understand or change the code below.
 int main(int argc, char *argv[]) {
 
+	int iteration = 0;
+	if (argc == 1){
+		iteration = atoi(argv[0]);
+	}
+
 	CentralGovernment federal;
 	int turn = 0;
 
 	std::string current_line;
 	std::string map_data;
 
-	PlanetWars pw;
+	PlanetWars pw(iteration);
 
 	while (true) {
 		int c = std::cin.get();

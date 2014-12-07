@@ -151,7 +151,7 @@ private:
 class PlanetWars {
 public:
 	// Initializes the game state given a string containing game state data.
-	PlanetWars();
+	PlanetWars(int iteration);
 
 	int Initialize(const std::string& game_state);
 	int Update(const std::string& game_state);
@@ -243,6 +243,7 @@ public:
 	FleetList FleetsArrivingAt(int destination_planet) const;
 
 	int Turn() const {return turn_;}
+	int Iteration() const {return iteration_;}
 
 	std::map<int, int>* PlanetColony() const {return planetColony;}
 
@@ -269,6 +270,7 @@ private:
 	std::map<int, int> *planetColony;
 	int num_planets_;
 	int turn_;
+	int iteration_;
 
 	Logger *logger;
 };

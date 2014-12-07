@@ -111,11 +111,12 @@ void Planet::RemoveShips(int amount) {
 
 // ######### PlanetWars #########
 
-PlanetWars::PlanetWars() {
+PlanetWars::PlanetWars(int iteration) {
 	logger = new Logger("PlanetWars.log");
 	turn_ = 0;
 	num_planets_ = -1;
 	planetColony = new std::map<int, int>();
+	iteration_ = iteration;
 }
 
 int PlanetWars::NumPlanets() const {
