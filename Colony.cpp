@@ -8,6 +8,8 @@
 #include "Colony.h"
 #include <iostream>
 #include <algorithm>
+#include <stdlib.h>
+#include <time.h>
 using namespace std;
 
 Colony::Colony(int id){

@@ -13,6 +13,7 @@ using namespace std;
 
 CentralGovernment::CentralGovernment() {
 	logger = new Logger("CentralGovernment.log");
+	srand(time(NULL));
 }
 
 CentralGovernment::~CentralGovernment() {
@@ -38,6 +39,11 @@ void CentralGovernment::HandleColonies(const PlanetWars &pw){
 
 		return;
 	}
+
+	bool random_action = (((rand() % 1000) / 1000.0) > EXPLOITATION) ? true : false;
+
+	sprintf(logger->buffer, "Choose action randomly");
+	logger->log();
 
 	double max_q = -99999999;
 	Action* max_action = 0;
