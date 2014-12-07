@@ -8,7 +8,7 @@
 #include "CentralGovernment.h"
 #include <map>
 #include <stdlib.h>     /* atof */
-
+#include <time.h>
 using namespace std;
 
 CentralGovernment::CentralGovernment() {
@@ -28,11 +28,12 @@ void CentralGovernment::DoTurn(const PlanetWars &pw){
 void CentralGovernment::HandleColonies(const PlanetWars &pw){
 	//Start Q-learning
 
-	if (!pw.IsAlive(ME)){
+	if (!pw.IsAlive(ME) || !pw.IsAlive(ENEMY)){
 		sprintf(logger->buffer, "I am dead at turn %d: \n\tWriting Q-Values to file.", pw.Turn());
 		logger->log();
 
 		WriteQValues();
+		colonies[0]->QValueObj()->WriteQValues();
 
 		sprintf(logger->buffer, "\tWriting Q-Values complete.");
 		logger->log();
@@ -40,7 +41,7 @@ void CentralGovernment::HandleColonies(const PlanetWars &pw){
 		return;
 	}
 
-	bool random_action = (((rand() % 1000) / 1000.0) > EXPLOITATION) ? true : false;
+	bool random_action = (((rand() % 1000) / 1000.0) > EXPLOITATION_COLONY) ? true : false;
 	double max_q = -99999999;
 	Action* max_action = 0;
 	int action_t = -1;
@@ -164,7 +165,7 @@ double CentralGovernment::Reward(const PlanetWars &pw, Action *action){
 }
 
 void CentralGovernment::ReadQValues(){
-	snprintf(logger->buffer, 100, "%s.q", MAP_NAME);
+	snprintf(logger->buffer, 100, "%s.q", MAP_NAME_CENTRAL);
 	string file_name = logger->buffer;
 	bool file_check = check_file_exists(file_name);
 
@@ -214,13 +215,13 @@ void CentralGovernment::ReadQValues(){
 }
 
 void CentralGovernment::WriteQValues(){
-	snprintf(logger->buffer, 100, "%s.q", MAP_NAME);
+	snprintf(logger->buffer, 100, "%s.q", MAP_NAME_CENTRAL);
 	string file_name = logger->buffer;
 
-	if( remove(file_name.c_str()) != 0 )
-		perror( "Error deleting file" );
+	if(remove(file_name.c_str()) != 0)
+		perror("Error deleting file");
 	else
-		puts( "File successfully deleted" );
+		puts("File successfully deleted");
 
 	ofstream out;
 	out.open (file_name.c_str());
@@ -300,4 +301,11 @@ void CentralGovernment::InitializeColonies(const PlanetWars &pw){
 	logger->log();
 
 	ReadQValues();
+
+	Colony::QValue *q_value_obj = new Colony::QValue();
+	q_value_obj->Initialize(pw);
+
+	for(size_t i = 0; i < colonies.size(); i++){
+		colonies[i]->QValueObj(q_value_obj);
+	}
 }

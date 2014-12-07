@@ -10,11 +10,15 @@
 
 #include "PlanetWars.h"
 #include <vector>
+#include <sys/stat.h>
 #include "Logger.cpp"
 #include "Constants.h"
 
 class Colony {
 public:
+	class QValue;
+	class Action;
+
 	Colony();
 	Colony(int id);
 	virtual ~Colony();
@@ -42,9 +46,46 @@ public:
 	bool HasFriendlyPlanet(const PlanetWars &pw);
 
 	int* Planets() {return planets;}
+	void QValueObj(QValue *q_value_obj){this->q_value_obj = q_value_obj;}
+	QValue* QValueObj(){return q_value_obj;}
+
+	class QValue{
+	public:
+		QValue(){
+			logger = new Logger("Colonies.log");
+		}
+
+		double* q_values;
+		int num_q_values;
+
+		int dimension;
+		int* lengths;
+
+		std::vector<Action*> actions;
+
+		void Initialize(const PlanetWars &pw);
+		void ReadQValues();
+		void WriteQValues();
+
+		Logger *logger;
+
+		inline bool check_file_exists (const std::string& name) {
+			struct stat buffer;
+			return (stat (name.c_str(), &buffer) == 0);
+		}
+	};
+
+	class Action{
+	public:
+		Action(int destication){
+			this->destination = destication;
+		}
+
+		int destination;
+	};
 
 private:
-	enum ColonyTypes {F = 1, E = 2, N = 3, FE = 4, FN = 5, EN = 6, FEN = 7} colonyType;
+	QValue *q_value_obj;
 
 	int strongness;
 	int strongness_next_state;
@@ -57,6 +98,23 @@ private:
 	std::vector<Fleet*> fleets;
 
 	Logger *logger;
+
+	inline int get_index_for(std::vector<int> indexes){
+		int temp = 1;
+		int result = 0;
+		for (size_t i = 1; i < q_value_obj->dimension; i++){
+			temp *= q_value_obj->lengths[i];
+		}
+
+		for (size_t i = 0; i < q_value_obj->dimension; i++){
+			result += indexes[i] * temp;
+			if (i + 1 < q_value_obj->dimension){
+				temp /= q_value_obj->lengths[i + 1];
+			}
+		}
+
+		return result;
+	}
 };
 
 #endif /* COLONY_H_ */
