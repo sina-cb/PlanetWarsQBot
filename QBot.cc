@@ -15,6 +15,7 @@ int main(int argc, char *argv[]) {
 	if (argc == 2){
 		iteration = atoi(argv[1]);
 	}
+	iteration = 0;
 
 	sprintf(logger->buffer, "%d", argc);
 	logger->log();
