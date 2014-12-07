@@ -28,11 +28,21 @@ void CentralGovernment::DoTurn(const PlanetWars &pw){
 void CentralGovernment::HandleColonies(const PlanetWars &pw){
 	//Start Q-learning
 
-	if (!pw.IsAlive(ME) || !pw.IsAlive(ENEMY)){
-		sprintf(logger->buffer, "I am dead at turn %d: \n\tWriting Q-Values to file.", pw.Turn());
-		logger->log();
+	bool amIDead = !pw.IsAlive(ME);
+	bool isHeDead = !pw.IsAlive(ENEMY);
+	if (amIDead || isHeDead){
+		if (amIDead){
+			sprintf(logger->buffer, "I am dead at turn %d: \n\tWriting Q-Values to file.", pw.Turn());
+			logger->log();
+		}else if(isHeDead){
+			sprintf(logger->buffer, "I won at turn %d: \n\tWriting Q-Values to file.", pw.Turn());
+			logger->log();
+		}
 
+		//Write Q-Value for the first Q-Learning instance
 		WriteQValues();
+
+		//Write Q-Value for the second Q-Learning instance
 		colonies[0]->QValueObj()->WriteQValues();
 
 		sprintf(logger->buffer, "\tWriting Q-Values complete.");
@@ -47,6 +57,8 @@ void CentralGovernment::HandleColonies(const PlanetWars &pw){
 	int action_t = -1;
 
 	if (random_action){
+		sprintf(logger->buffer, "Random selection");
+		logger->log();
 		while (true){
 			action_t = rand() % actions.size();
 			max_action = actions[action_t];
@@ -74,6 +86,9 @@ void CentralGovernment::HandleColonies(const PlanetWars &pw){
 			return;
 		}
 	}
+
+	sprintf(logger->buffer, "Source Colony: %d , Destination Colony: %d", max_action->source, max_action->destination);
+	logger->log();
 
 	colonies[max_action->source]->DoTurn(pw, colonies[max_action->destination]);
 
@@ -142,7 +157,7 @@ void CentralGovernment::EstimateNextState(const PlanetWars &pw){
 double CentralGovernment::Reward(const PlanetWars &pw, Action *action){
 	int result = 0;
 
-	int total;
+	int total = 0;
 
 	FleetList fleets = pw.Fleets();
 	for (size_t i = 0; i < fleets.size(); i++){
@@ -243,7 +258,7 @@ void CentralGovernment::InitializeColonies(const PlanetWars &pw){
 	}
 
 	size_t index = 0;
-	int colonyID = 1;
+	int colonyID = 0;
 	while (index < planets.size()){
 		if (planetToColony[planets[index]->PlanetID()] != -1){
 			index++;

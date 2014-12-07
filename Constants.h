@@ -5,7 +5,7 @@
 //Colony Related Constants
 #define COLONY_MAX_SIZE 4
 
-#define MAX_NUM_MY_FLEETS 2
+#define MAX_NUM_MY_FLEETS 5
 #define ELIGIBILITY_THRESHOLD_PERCENT 20
 
 #define STRONGNESS_STEP 50
@@ -16,8 +16,12 @@
 #define DISCOUNT_PLANET 0.2
 
 #define PLANET_STRONGNESS_MIN 0
-#define PLANET_STRONGNESS_MAX 500
-#define PLANET_STRONGNESS_STEP 100
+#define PLANET_STRONGNESS_MAX 400
+#define PLANET_STRONGNESS_STEP 50
+
+#define FLEET_SIZE_CONSTANT 0.8
+#define FLEET_SIZE_CONSTANT_STEP 0.1
+#define FLEET_SIZE_ITERATIONS 4
 
 //********************************************************//
 

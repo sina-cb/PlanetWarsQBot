@@ -49,6 +49,9 @@ public:
 	void QValueObj(QValue *q_value_obj){this->q_value_obj = q_value_obj;}
 	QValue* QValueObj(){return q_value_obj;}
 
+	double Reward(const PlanetWars &pw, int action_t);
+	void CalculatedNewQValue(const PlanetWars &pw, vector<int> &old_strongness, vector<int> &new_strongness, int action_t, int num_fleets);
+
 	class QValue{
 	public:
 		QValue(){
