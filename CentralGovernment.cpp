@@ -41,6 +41,7 @@ void CentralGovernment::HandleColonies(const PlanetWars &pw){
 
 	double max_q = -99999999;
 	Action* max_action = 0;
+	int action_t = -1;
 	for (size_t i = 0; i < actions.size(); i++){
 		vector<int> indexes;
 		for (size_t j = 0; j < colonies.size(); j++){
@@ -51,6 +52,7 @@ void CentralGovernment::HandleColonies(const PlanetWars &pw){
 		if (colonies[actions[i]->source]->HasFriendlyPlanet(pw) && q_values[get_index_for(indexes)] > max_q){
 			max_q = q_values[get_index_for(indexes)];
 			max_action = actions[i];
+			action_t = i;
 		}
 	}
 
@@ -59,6 +61,51 @@ void CentralGovernment::HandleColonies(const PlanetWars &pw){
 	}
 
 	colonies[max_action->source]->DoTurn(pw, colonies[max_action->destination]);
+
+	EstimateNextState(pw);
+
+	CalculatedNewQValue(pw, action_t);
+
+}
+
+void CentralGovernment::CalculatedNewQValue(const PlanetWars &pw, int action_t){
+	vector<int> state;
+	for (size_t j = 0; j < colonies.size(); j++){
+		state.push_back(colonies[j]->Strongness());
+	}
+	state.push_back(action_t);
+
+	double q_old = q_values[get_index_for(state)];
+
+	if (!pw.IsAlive(ME)){
+		q_old = -1;
+	}
+
+	if (!pw.IsAlive(ENEMY)){
+		q_old = 1;
+	}
+
+	double max_est_q = -99999999;
+	Action* max_est_action = 0;
+	for (size_t i = 0; i < actions.size(); i++){
+		vector<int> state_est;
+		for (size_t j = 0; j < colonies.size(); j++){
+			state_est.push_back(colonies[j]->StrongnessEstimation());
+		}
+		state_est.push_back(actions[i]->ID);
+
+		if (q_values[get_index_for(state_est)] > max_est_q){
+			max_est_q = q_values[get_index_for(state_est)];
+			max_est_action = actions[i];
+			action_t = i;
+		}
+	}
+
+	double q_new = ((1 - ALPHA_COLONY_Q) * q_old) + (ALPHA_COLONY_Q * (Reward(pw, actions[action_t]) + DISCOUNT_COLONY * max_est_q));
+	q_values[get_index_for(state)] = q_new;
+
+	sprintf(logger->buffer, "New Q Value: %f", q_new);
+	logger->log();
 }
 
 void CentralGovernment::UpdateColonies(const PlanetWars &pw){
@@ -67,8 +114,16 @@ void CentralGovernment::UpdateColonies(const PlanetWars &pw){
 	}
 }
 
-int CentralGovernment::Reward(const PlanetWars &pw, Action *action){
+void CentralGovernment::EstimateNextState(const PlanetWars &pw){
+	for (size_t i = 0; i < colonies.size(); i++){
+		colonies[i]->UpdateNextStateColony(pw);
+	}
+}
+
+double CentralGovernment::Reward(const PlanetWars &pw, Action *action){
 	int result = 0;
+
+	int total;
 
 	FleetList fleets = pw.Fleets();
 	for (size_t i = 0; i < fleets.size(); i++){
@@ -78,14 +133,16 @@ int CentralGovernment::Reward(const PlanetWars &pw, Action *action){
 			if (fleet->TurnsRemaining() <= MAX_TURNS_REMAINING_TO_CONSIDER_IN_REWARD){
 				if (fleet->Owner() == ME){
 					result += (pw.GetPlanet(fleet->DestinationPlanet())->GrowthRate() * fleet->NumShips());
+					total += (pw.GetPlanet(fleet->DestinationPlanet())->GrowthRate() * fleet->NumShips());
 				}else{
 					result -= (pw.GetPlanet(fleet->DestinationPlanet())->GrowthRate() * fleet->NumShips());
+					total += (pw.GetPlanet(fleet->DestinationPlanet())->GrowthRate() * fleet->NumShips());
 				}
 			}
 		}
 	}
 
-	return result;
+	return (result / (double)total);
 }
 
 void CentralGovernment::ReadQValues(){

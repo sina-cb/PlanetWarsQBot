@@ -45,7 +45,9 @@ private:
 	 * Update Colony Parameters at the beginning of each Turn.
 	 */
 	void UpdateColonies(const PlanetWars &pw);
+	void EstimateNextState(const PlanetWars &pw);
 
+	void CalculatedNewQValue(const PlanetWars &pw, int action_t);
 	void ReadQValues();
 	void WriteQValues();
 
@@ -62,7 +64,7 @@ private:
 	int dimension;
 	int* lengths;
 
-	int Reward(const PlanetWars &pw, Action *action);
+	double Reward(const PlanetWars &pw, Action *action);
 
 	class Action{
 	public:

@@ -19,6 +19,7 @@
 #define MAX_TURNS_REMAINING_TO_CONSIDER_IN_REWARD 2
 
 #define ALPHA_COLONY_Q 0.9
+#define DISCOUNT_COLONY 0.2
 
 #define MAP_NAME "map07"
 #define MAP_FORMAT "%.8f\n"

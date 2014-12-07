@@ -29,6 +29,7 @@ public:
 	 * parameters.
 	 */
 	void UpdateColony(const PlanetWars &pw);
+	void UpdateNextStateColony(const PlanetWars &pw);
 
 	bool addPlanet(Planet *planet, const PlanetWars &pw);
 	bool IfPlanetHere(const PlanetWars &pw, int planetID);
@@ -37,6 +38,7 @@ public:
 	int ID();
 	int Size();
 	int Strongness();
+	int StrongnessEstimation();
 	bool HasFriendlyPlanet(const PlanetWars &pw);
 
 	int* Planets() {return planets;}
@@ -45,6 +47,7 @@ private:
 	enum ColonyTypes {F = 1, E = 2, N = 3, FE = 4, FN = 5, EN = 6, FEN = 7} colonyType;
 
 	int strongness;
+	int strongness_next_state;
 	int attackThreshold;
 
 	int id;

@@ -64,6 +64,11 @@ Planet::Planet(int planet_id, int owner, int num_ships, int growth_rate,
 	y_ = y;
 }
 
+Planet::Planet(const Planet& other):
+		planet_id_(other.planet_id_), owner_(other.owner_), num_ships_(other.num_ships_), growth_rate_(other.growth_rate_),
+		x_(other.x_), y_(other.y_)
+{}
+
 int Planet::PlanetID() const {
 	return planet_id_;
 }
@@ -119,6 +124,10 @@ int PlanetWars::NumPlanets() const {
 
 const Planet* PlanetWars::GetPlanet(int planet_id) const {
 	return planets_[planet_id];
+}
+
+Planet* PlanetWars::GetPlanetNewState(int planet_id) const {
+	return planets_new_state_[planet_id];
 }
 
 int PlanetWars::NumFleets() const {
@@ -335,6 +344,8 @@ void PlanetWars::IssueOrder(int source_planet, int destination_planet,
 	std::cout << source_planet << " " << destination_planet << " " << num_ships
 			<< std::endl;
 	std::cout.flush();
+	Planet* planet = GetPlanetNewState(source_planet);
+	planet->NumShips(planet->NumShips() - num_ships);
 }
 
 bool PlanetWars::IsAlive(int player_id) const {
@@ -432,7 +443,7 @@ int PlanetWars::Initialize(const std::string& s) {
 					atof(tokens[1].c_str()),  // X
 					atof(tokens[2].c_str())); // Y
 			planets_.push_back(p);
-
+			planets_new_state_.push_back(new Planet(*p));
 		} else if (tokens[0] == "F") {
 			if (tokens.size() != 7) {
 				return 0;
@@ -536,6 +547,10 @@ int PlanetWars::Update(const std::string& s) {
 
 			//Update the planet state.
 			Planet* planet = planets_[planet_id];
+			planet->Owner(atoi(tokens[3].c_str()));
+			planet->NumShips(atoi(tokens[4].c_str()));
+
+			planet = planets_new_state_[planet_id];
 			planet->Owner(atoi(tokens[3].c_str()));
 			planet->NumShips(atoi(tokens[4].c_str()));
 

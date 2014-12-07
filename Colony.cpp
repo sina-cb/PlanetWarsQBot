@@ -111,6 +111,35 @@ void Colony::UpdateColony(const PlanetWars &pw){
 	//TODO: We haven't updated the colonyType variable, if you needed it, update it! :D
 }
 
+void Colony::UpdateNextStateColony(const PlanetWars& pw){
+	strongness_next_state = 0;
+	for (size_t i = 0; i < size; i++){
+		const Planet *planet = pw.GetPlanet(planets[i]);
+		if (planet->Owner() == ME){
+			strongness_next_state += planet->GrowthRate() * planet->NumShips();
+		}else if(planet->Owner() == ENEMY){
+			strongness_next_state -= planet->GrowthRate() * planet->NumShips();
+		}else if(planet->Owner() == NEUTRAL){
+			strongness_next_state -= planet->NumShips();
+		}
+
+		if (planet->GrowthRate() * planet->NumShips() < attackThreshold){
+			eligable[i] = false;
+		}else{
+			eligable[i] = true;
+		}
+	}
+
+	//Discretization of strongness parameter
+	if (strongness_next_state < MIN_STRONGNESS){
+		strongness_next_state = MIN_STRONGNESS;
+	}else if (strongness_next_state >= MAX_STRONGNESS){
+		strongness_next_state = MAX_STRONGNESS;
+	}
+
+	strongness_next_state = (strongness_next_state - MIN_STRONGNESS) / STEPS;
+}
+
 bool Colony::addPlanet(Planet *planet, const PlanetWars &pw){
 	map<int, int> &planetToColony = *pw.PlanetColony();
 
@@ -144,6 +173,10 @@ int Colony::Size(){
 
 int Colony::Strongness(){
 	return strongness;
+}
+
+int Colony::StrongnessEstimation(){
+	return strongness_next_state;
 }
 
 bool Colony::HasFriendlyPlanet(const PlanetWars &pw){

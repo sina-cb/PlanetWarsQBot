@@ -104,6 +104,8 @@ public:
 			double x,
 			double y);
 
+	Planet(const Planet& other);
+
 	// Returns the ID of this planets. Planets are numbered starting at zero.
 	int PlanetID() const;
 
@@ -161,6 +163,8 @@ public:
 	// Returns the planet with the given planet_id. There are NumPlanets()
 	// planets. They are numbered starting at 0.
 	const Planet* GetPlanet(int planet_id) const;
+
+	Planet* GetPlanetNewState(int planet_id) const;
 
 	// Returns the number of fleets.
 	int NumFleets() const;
@@ -252,6 +256,7 @@ private:
 	// Store all the planets and fleets. OMG we wouldn't wanna lose all the
 	// planets and fleets, would we!?
 	PlanetList planets_;
+	PlanetList planets_new_state_;
 	FleetList fleets_;
 
 	std::vector<int> planet_distances_;
