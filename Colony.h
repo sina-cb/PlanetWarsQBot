@@ -26,7 +26,7 @@ public:
 	/**
 	 * Runs Q-Learning at the Planet Level, to find the destination planet to attack
 	 */
-	void DoTurn(const PlanetWars &pw, Colony* destination);
+	bool DoTurn(const PlanetWars &pw, Colony* destination);
 
 	/**
 	 * This function should be run at the beginning of each turn to update the colony

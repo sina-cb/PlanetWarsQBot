@@ -13,8 +13,8 @@ using namespace std;
 
 CentralGovernment::CentralGovernment() {
 	logger = new Logger("CentralGovernment.log");
-	game_finished = false;
 	srand(time(NULL));
+	writeOnce = true;
 }
 
 CentralGovernment::~CentralGovernment() {
@@ -22,30 +22,20 @@ CentralGovernment::~CentralGovernment() {
 }
 
 void CentralGovernment::DoTurn(const PlanetWars &pw){
-	if (!game_finished){
-		UpdateColonies(pw);
-		HandleColonies(pw);
-	}else{
-		pw.FinishTurn();
-		sprintf(logger->buffer, "Game has been finished!");
-		logger->log();
-	}
+	sprintf(logger->buffer, "Start DoTurn Central");
+	logger->log();
+
+	UpdateColonies(pw);
+	HandleColonies(pw);
+
+	sprintf(logger->buffer, "End DoTurn Central\n");
+	logger->log();
 }
 
 void CentralGovernment::HandleColonies(const PlanetWars &pw){
 	//Start Q-learning
 
-	bool amIDead = !pw.IsAlive(ME);
-	bool isHeDead = !pw.IsAlive(ENEMY);
-	if (amIDead || isHeDead){
-		if (amIDead){
-			sprintf(logger->buffer, "I am dead at turn %d: \n\tWriting Q-Values to file.", pw.Turn());
-			logger->log();
-		}else if(isHeDead){
-			sprintf(logger->buffer, "I won at turn %d: \n\tWriting Q-Values to file.", pw.Turn());
-			logger->log();
-		}
-
+	if ((!pw.IsAlivePlanets(ME) || !pw.IsAlivePlanets(ENEMY)) && writeOnce){
 		//Write Q-Value for the first Q-Learning instance
 		WriteQValues();
 
@@ -54,18 +44,17 @@ void CentralGovernment::HandleColonies(const PlanetWars &pw){
 
 		sprintf(logger->buffer, "\tWriting Q-Values complete.");
 		logger->log();
-
-		return;
-	}
-
-	if (!pw.IsAlivePlanets(ME)){
-		return;
+		writeOnce = false;
 	}
 
 	bool random_action = (((rand() % 1000) / 1000.0) > EXPLOITATION_COLONY) ? true : false;
 	double max_q = -99999999;
 	Action* max_action = 0;
 	int action_t = -1;
+
+	if (!pw.IsAlivePlanets(ME)){
+		random_action = false;
+	}
 
 	if (random_action){
 		sprintf(logger->buffer, "Random selection");
@@ -77,6 +66,9 @@ void CentralGovernment::HandleColonies(const PlanetWars &pw){
 			if (colonies[max_action->source]->HasFriendlyPlanet(pw)){
 				break;
 			}
+
+			sprintf(logger->buffer, "While True :: Central");
+			logger->log();
 		}
 	}else{
 		for (size_t i = 0; i < actions.size(); i++){
@@ -93,21 +85,23 @@ void CentralGovernment::HandleColonies(const PlanetWars &pw){
 			}
 		}
 
-		if (max_q == -99999999){
-			return;
-		}
 	}
 
-	sprintf(logger->buffer, "Source Colony: %d , Destination Colony: %d", max_action->source, max_action->destination);
-	logger->log();
+	if (action_t != -1){
+		sprintf(logger->buffer, "Source Colony: %d , Destination Colony: %d", max_action->source, max_action->destination);
+		logger->log();
 
-	colonies[max_action->source]->DoTurn(pw, colonies[max_action->destination]);
+		bool result = colonies[max_action->source]->DoTurn(pw, colonies[max_action->destination]);
 
-	EstimateNextState(pw);
-	CalculatedNewQValue(pw, action_t);
+		EstimateNextState(pw);
+		CalculatedNewQValue(pw, action_t);
+	}
 }
 
 void CentralGovernment::CalculatedNewQValue(const PlanetWars &pw, int action_t){
+	sprintf(logger->buffer, "CalculatedNewQValue::START");
+	logger->log();
+
 	double alpha = ALPHA_COLONY_Q;
 
 	if (pw.Iteration() != 0){
@@ -120,37 +114,45 @@ void CentralGovernment::CalculatedNewQValue(const PlanetWars &pw, int action_t){
 	}
 	state.push_back(action_t);
 
+	sprintf(logger->buffer, "HERE 1");
+	logger->log();
+
 	double q_old = q_values[get_index_for(state)];
-
-	if (!pw.IsAlive(ME)){
-		q_old = -1;
-	}
-
-	if (!pw.IsAlive(ENEMY)){
-		q_old = 1;
-	}
 
 	double max_est_q = -99999999;
 	Action* max_est_action = 0;
-	for (size_t i = 0; i < actions.size(); i++){
-		vector<int> state_est;
-		for (size_t j = 0; j < colonies.size(); j++){
-			state_est.push_back(colonies[j]->StrongnessEstimation());
-		}
-		state_est.push_back(actions[i]->ID);
 
-		if (q_values[get_index_for(state_est)] > max_est_q){
-			max_est_q = q_values[get_index_for(state_est)];
-			max_est_action = actions[i];
-			action_t = i;
+	if (!pw.IsAlivePlanets(ME)){
+		max_est_q = -1;
+		sprintf(logger->buffer, "HERE 2");
+		logger->log();
+	}else if (!pw.IsAlivePlanets(ENEMY)){
+		max_est_q = 1;
+		sprintf(logger->buffer, "HERE 3");
+		logger->log();
+	}else{
+		for (size_t i = 0; i < actions.size(); i++){
+			vector<int> state_est;
+			for (size_t j = 0; j < colonies.size(); j++){
+				state_est.push_back(colonies[j]->StrongnessEstimation());
+			}
+			state_est.push_back(actions[i]->ID);
+
+			if (q_values[get_index_for(state_est)] > max_est_q){
+				max_est_q = q_values[get_index_for(state_est)];
+				max_est_action = actions[i];
+			}
 		}
 	}
+
+	sprintf(logger->buffer, "Selected max action: %d", action_t);
+	logger->log();
 
 	double q_new = ((1 - alpha) * q_old) + (alpha * (Reward(pw, actions[action_t]) + DISCOUNT_COLONY * max_est_q));
 	q_values[get_index_for(state)] = q_new;
 
-	/*sprintf(logger->buffer, "New Q Value: %f", q_new);
-	logger->log();*/
+	sprintf(logger->buffer, "CalculatedNewQValue::END");
+	logger->log();
 }
 
 void CentralGovernment::UpdateColonies(const PlanetWars &pw){

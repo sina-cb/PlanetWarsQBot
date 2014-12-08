@@ -34,6 +34,8 @@ public:
 	 */
 	void InitializeColonies(const PlanetWars &pw);
 
+	bool WriteOnce(){return writeOnce;}
+
 private:
 	class Action;
 
@@ -41,7 +43,7 @@ private:
 	std::vector<Colony*> colonies;
 	std::vector<Action*> actions;
 
-	bool game_finished;
+	bool save_q_values;
 
 	/**
 	 * Update Colony Parameters at the beginning of each Turn.
@@ -65,6 +67,7 @@ private:
 
 	int dimension;
 	int* lengths;
+	bool writeOnce;
 
 	double Reward(const PlanetWars &pw, Action *action);
 

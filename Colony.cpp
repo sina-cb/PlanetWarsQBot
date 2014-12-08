@@ -35,17 +35,17 @@ Colony::~Colony() {
 // that currently exist. Inside this function, you issue orders using the
 // pw.IssueOrder() function. For example, to send 10 ships from planet 3 to
 // planet 8, you would say pw.IssueOrder(3, 8, 10).
-void Colony::DoTurn(const PlanetWars &pw, Colony *destination) {
+bool Colony::DoTurn(const PlanetWars &pw, Colony *destination) {
 	sprintf(logger->buffer, "START TURN:");
 	logger->log();
 
 	// (1) Check if we don't exceed the max number of fleets
 	int num_my_fleets = pw.MyFleets().size();
 	if (num_my_fleets >= MAX_NUM_MY_FLEETS){
-		return;
+		sprintf(logger->buffer, "END TURN (Reached MAX Fleets)\n");
+		logger->log();
+		return false;
 	}
-
-	//**************************************************//
 
 	sprintf(logger->buffer, "Source Colony: %d , Destination Colony: %d", ID(), destination->ID());
 	logger->log();
@@ -64,7 +64,9 @@ void Colony::DoTurn(const PlanetWars &pw, Colony *destination) {
 	}
 
 	if (sources.size() == 0){
-		return;
+		sprintf(logger->buffer, "END TURN (No-Eligible)\n");
+		logger->log();
+		return false;
 	}
 
 	// (3) Discretize strongness of each planet in the colony
@@ -98,6 +100,10 @@ void Colony::DoTurn(const PlanetWars &pw, Colony *destination) {
 	Action* max_action = 0;
 	int action_t = -1;
 
+	if (!pw.IsAlivePlanets(ME) || !pw.IsAlive(ME)){
+		random_action = false;
+	}
+
 	if (random_action){
 		sprintf(logger->buffer, "Random decision");
 		logger->log();
@@ -106,13 +112,19 @@ void Colony::DoTurn(const PlanetWars &pw, Colony *destination) {
 			action_t = rand() % q_value_obj->actions.size();
 			max_action = q_value_obj->actions[action_t];
 
+			//No-Op
 			if (max_action->destination == -1){
-				return;
+				sprintf(logger->buffer, "END TURN (NO-OP)\n");
+				logger->log();
+				return false;
 			}
 
 			if (destination->Planets()[max_action->destination] != -1){
 				break;
 			}
+
+			sprintf(logger->buffer, "While True :: Colony");
+			logger->log();
 		}
 	}else{
 		for (size_t i = 0; i < q_value_obj->actions.size(); i++){
@@ -135,7 +147,9 @@ void Colony::DoTurn(const PlanetWars &pw, Colony *destination) {
 		}
 
 		if (max_q == -99999999){
-			return;
+			sprintf(logger->buffer, "END TURN (No Destination Planet)\n");
+			logger->log();
+			return false;
 		}
 	}
 
@@ -159,7 +173,8 @@ void Colony::DoTurn(const PlanetWars &pw, Colony *destination) {
 
 				average_dist += pw.Distance(sources[i], destination->Planets()[max_action->destination]);
 			}
-			average_dist = ((int) average_dist / sources.size()) + 1;
+
+			average_dist = ((int) average_dist / sources.size()) * ENEMY_STRONGNESS_ESTIMATION_CONSTANT;
 
 			int enemy_strongness = pw.GetPlanet(destination->Planets()[max_action->destination])->NumShips();
 			enemy_strongness += (average_dist * pw.GetPlanet(destination->Planets()[max_action->destination])->GrowthRate());
@@ -211,6 +226,8 @@ void Colony::DoTurn(const PlanetWars &pw, Colony *destination) {
 
 	sprintf(logger->buffer, "END TURN:\n");
 	logger->log();
+
+	return true;
 }
 
 void Colony::CalculatedNewQValue(const PlanetWars &pw, vector<int> &old_strongness, vector<int> &new_strongness, int action_t, int num_fleets){
@@ -297,6 +314,8 @@ void Colony::UpdateColony(const PlanetWars &pw){
 }
 
 void Colony::UpdateNextStateColony(const PlanetWars& pw){
+	sprintf(logger->buffer, "UpdateNextStateColony::START");
+	logger->log();
 	strongness_next_state = 0;
 	for (size_t i = 0; i < size; i++){
 		const Planet *planet = pw.GetPlanetNewState(planets[i]);
@@ -323,6 +342,9 @@ void Colony::UpdateNextStateColony(const PlanetWars& pw){
 	}
 
 	strongness_next_state = (strongness_next_state - MIN_STRONGNESS) / STEPS;
+
+	sprintf(logger->buffer, "UpdateNextStateColony::END");
+	logger->log();
 }
 
 bool Colony::addPlanet(Planet *planet, const PlanetWars &pw){

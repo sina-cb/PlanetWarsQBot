@@ -23,6 +23,8 @@
 #define FLEET_SIZE_CONSTANT_STEP 0.1
 #define FLEET_SIZE_ITERATIONS 4
 
+#define ENEMY_STRONGNESS_ESTIMATION_CONSTANT 1.1
+
 //********************************************************//
 
 //********************************************************//
