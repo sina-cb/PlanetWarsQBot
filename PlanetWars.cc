@@ -357,11 +357,22 @@ bool PlanetWars::IsAlive(int player_id) const {
 			return true;
 		}
 	}
-	/*for (size_t i = 0; i < fleets_.size(); ++i) {
+	for (size_t i = 0; i < fleets_.size(); ++i) {
 		if (fleets_[i]->Owner() == player_id) {
 			return true;
 		}
-	}*/
+	}
+	return false;
+}
+
+bool PlanetWars::IsAlivePlanets(int player_id) const {
+	for (size_t i = 0; i < planets_.size(); ++i) {
+		if (planets_[i]->Owner() == player_id) {
+			sprintf(logger->buffer, "Alive");
+			logger->log();
+			return true;
+		}
+	}
 	return false;
 }
 

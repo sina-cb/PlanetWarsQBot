@@ -55,8 +55,10 @@ void CentralGovernment::HandleColonies(const PlanetWars &pw){
 		sprintf(logger->buffer, "\tWriting Q-Values complete.");
 		logger->log();
 
-		game_finished = true;
+		return;
+	}
 
+	if (!pw.IsAlivePlanets(ME)){
 		return;
 	}
 

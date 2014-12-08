@@ -229,6 +229,7 @@ public:
 	// Returns true if the named player owns at least one planet or fleet.
 	// Otherwise, the player is deemed to be dead and false is returned.
 	bool IsAlive(int player_id) const;
+	bool IsAlivePlanets(int player_id) const;
 
 	// Returns the number of ships that the given player has, either located
 	// on planets or in flight.
