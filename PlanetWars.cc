@@ -345,6 +345,7 @@ void PlanetWars::IssueOrder(int source_planet, int destination_planet,
 	std::cout << source_planet << " " << destination_planet << " " << num_ships
 			<< std::endl;
 	std::cout.flush();
+
 	Planet* planet = GetPlanetNewState(source_planet);
 	planet->NumShips(planet->NumShips() - num_ships);
 }
@@ -352,8 +353,6 @@ void PlanetWars::IssueOrder(int source_planet, int destination_planet,
 bool PlanetWars::IsAlive(int player_id) const {
 	for (size_t i = 0; i < planets_.size(); ++i) {
 		if (planets_[i]->Owner() == player_id) {
-			sprintf(logger->buffer, "Alive");
-			logger->log();
 			return true;
 		}
 	}
@@ -368,8 +367,6 @@ bool PlanetWars::IsAlive(int player_id) const {
 bool PlanetWars::IsAlivePlanets(int player_id) const {
 	for (size_t i = 0; i < planets_.size(); ++i) {
 		if (planets_[i]->Owner() == player_id) {
-			sprintf(logger->buffer, "Alive");
-			logger->log();
 			return true;
 		}
 	}

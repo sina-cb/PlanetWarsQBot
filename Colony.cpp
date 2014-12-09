@@ -39,34 +39,29 @@ bool Colony::DoTurn(const PlanetWars &pw, Colony *destination) {
 	sprintf(logger->buffer, "START TURN:");
 	logger->log();
 
-	// (1) Check if we don't exceed the max number of fleets
-	int num_my_fleets = pw.MyFleets().size();
-	if (num_my_fleets >= MAX_NUM_MY_FLEETS){
-		sprintf(logger->buffer, "END TURN (Reached MAX Fleets)\n");
-		logger->log();
-		return false;
-	}
-
 	sprintf(logger->buffer, "Source Colony: %d , Destination Colony: %d", ID(), destination->ID());
 	logger->log();
+
+	// (1) If there is no Enemy planet left, just help your own planets!
+	if (!pw.IsAlivePlanets(ENEMY)){
+		int source = pw.MyPlanets()[0]->PlanetID();
+		int dest = pw.MyPlanets()[1]->PlanetID();
+		pw.IssueOrder(source, dest, pw.GetPlanet(source)->NumShips() / 2);
+		return true;
+	}
 
 	// (2) Find my eligible planets to attack.
 	vector<int> sources;
 	for (size_t i = 0; i < size; i++){
-		const Planet* planet = pw.GetPlanet(planets[i]);
-		if (planet->Owner() == ME){
-			if (planet->NumShips() > ELIGIBILITY_THRESHOLD_PERCENT){
-				sources.push_back(planets[i]);
-				sprintf(logger->buffer, "Source Planet: %d", planets[i]);
-				logger->log();
-			}
+		if (eligable[i]){
+			sources.push_back(pw.GetPlanet(planets[i])->PlanetID());
 		}
 	}
 
 	if (sources.size() == 0){
 		sprintf(logger->buffer, "END TURN (No-Eligible)\n");
 		logger->log();
-		return false;
+		return true;
 	}
 
 	// (3) Discretize strongness of each planet in the colony
@@ -81,7 +76,7 @@ bool Colony::DoTurn(const PlanetWars &pw, Colony *destination) {
 			if (ships_num < PLANET_STRONGNESS_MIN){
 				ships_num = PLANET_STRONGNESS_MIN;
 			}else if (ships_num >= PLANET_STRONGNESS_MAX){
-				ships_num = PLANET_STRONGNESS_MAX;
+				ships_num = PLANET_STRONGNESS_MAX - 1;
 			}
 
 			ships_num = (ships_num - PLANET_STRONGNESS_MIN) / PLANET_STRONGNESS_STEP;
@@ -95,17 +90,22 @@ bool Colony::DoTurn(const PlanetWars &pw, Colony *destination) {
 	}
 	logger->log();
 
+	// (4) Find the appropriate action
 	bool random_action = (((rand() % 1000) / 1000.0) > EXPLOITATION_PLANET) ? true : false;
-	double max_q = -99999999;
-	Action* max_action = 0;
-	int action_t = -1;
 
+	// (4.1) If one the players are dead, then it's better not to act randomly!
 	if (!pw.IsAlivePlanets(ME) || !pw.IsAlive(ME)){
 		random_action = false;
 	}
 
+	double max_q = -99999999;
+	Action* max_action = 0;
+	int action_t = -1;
+	int dest = -1;
+
+	//Whether we need to act randomly or based on our Q-values
 	if (random_action){
-		sprintf(logger->buffer, "Random decision");
+		sprintf(logger->buffer, "Exploitation Step!");
 		logger->log();
 
 		while (true){
@@ -132,77 +132,38 @@ bool Colony::DoTurn(const PlanetWars &pw, Colony *destination) {
 			for (size_t j = 0; j < planet_strongness.size(); j++){
 				indexes.push_back(planet_strongness[j]);
 			}
-			if (num_my_fleets > MAX_NUM_MY_FLEETS){
-				indexes.push_back(MAX_NUM_MY_FLEETS);
-			}else{
-				indexes.push_back(num_my_fleets);
-			}
 			indexes.push_back(i);
 
 			if (destination->Planets()[q_value_obj->actions[i]->destination] != -1 && q_value_obj->q_values[get_index_for(indexes)] > max_q){
 				max_q = q_value_obj->q_values[get_index_for(indexes)];
 				max_action = q_value_obj->actions[i];
 				action_t = i;
+				dest = destination->Planets()[max_action->destination];
 			}
 		}
 
-		if (max_q == -99999999){
+		if (action_t == -1){
 			sprintf(logger->buffer, "END TURN (No Destination Planet)\n");
 			logger->log();
 			return false;
 		}
 	}
 
-	// (3.1) Find out how many ships should be in the fleet
-	vector<int> num_ships;
+	// (5) Decide about how many ships we have to send from each planet
+	vector<int> *num_ships = DecideNumShips(pw, sources, dest, max_action);
 
-	int chosen = 0;
-	if (pw.GetPlanet(destination->Planets()[max_action->destination])->Owner() == ENEMY){
-		for (int j = FLEET_SIZE_ITERATIONS; j >= 0; j--){
-			sprintf(logger->buffer, "Checking STEP: %f", FLEET_SIZE_CONSTANT - FLEET_SIZE_CONSTANT_STEP * j);
-			logger->log();
-
-			int total_friendly_ships = 0;
-			int average_dist = 0;
-
-			for (size_t i = 0; i < sources.size(); i++){
-				total_friendly_ships += ((pw.GetPlanet(sources[i])->NumShips()) * (FLEET_SIZE_CONSTANT - FLEET_SIZE_CONSTANT_STEP * j));
-
-				sprintf(logger->buffer, "Distance between %d and %d: %d", sources[i], destination->Planets()[max_action->destination], pw.Distance(sources[i], destination->Planets()[max_action->destination]));
-				logger->log();
-
-				average_dist += pw.Distance(sources[i], destination->Planets()[max_action->destination]);
-			}
-
-			average_dist = ((int) average_dist / sources.size()) * ENEMY_STRONGNESS_ESTIMATION_CONSTANT;
-
-			int enemy_strongness = pw.GetPlanet(destination->Planets()[max_action->destination])->NumShips();
-			enemy_strongness += (average_dist * pw.GetPlanet(destination->Planets()[max_action->destination])->GrowthRate());
-
-			if (total_friendly_ships > enemy_strongness){
-				chosen = j;
-				break;
-			}
-		}
-	}else{
-		chosen = FLEET_SIZE_ITERATIONS - 1;
-	}
-
-	for (size_t i = 0; i < sources.size(); i++){
-		num_ships.push_back( (int) ((pw.GetPlanet(sources[i])->NumShips()) * (FLEET_SIZE_CONSTANT - (chosen - 1) * FLEET_SIZE_CONSTANT_STEP)));
-	}
-
-	// (4) Send half the ships from my strongest planet to the weakest
-	// planet that I do not own.
-	if (sources.size() > 0 && max_action->destination != -1){
+	// (6) Issue Orders!!!
+	if (sources.size() > 0 && dest != -1){
 		for (size_t i = 0; i < sources.size(); i++){
-			pw.IssueOrder(sources[i], destination->Planets()[max_action->destination], num_ships[i]);
-			sprintf(logger->buffer, "Attack %d: Source: %d, Dest.: %d Ships: %d", (i + 1), sources[i], destination->Planets()[max_action->destination], num_ships[i]);
+			pw.IssueOrder(sources[i], dest, num_ships->data()[i]);
+			sprintf(logger->buffer, "Attack %d: Source: %d, Dest.: %d Ships: %d", (i + 1), sources[i], dest, num_ships->data()[i]);
 			logger->log();
 		}
 	}
 
-	// (5) Discretize strongness of each planet in the colony for the next state
+	// (7) Q-Learning Step Starts Here!
+
+	// (7.1) Estimate next state for the planets!
 	vector<int> planet_strongness_new;
 
 	for (size_t i = 0; i < COLONY_MAX_SIZE; i++){
@@ -214,7 +175,7 @@ bool Colony::DoTurn(const PlanetWars &pw, Colony *destination) {
 			if (ships_num < PLANET_STRONGNESS_MIN){
 				ships_num = PLANET_STRONGNESS_MIN;
 			}else if (ships_num >= PLANET_STRONGNESS_MAX){
-				ships_num = PLANET_STRONGNESS_MAX;
+				ships_num = PLANET_STRONGNESS_MAX - 1;
 			}
 
 			ships_num = (ships_num - PLANET_STRONGNESS_MIN) / PLANET_STRONGNESS_STEP;
@@ -222,7 +183,8 @@ bool Colony::DoTurn(const PlanetWars &pw, Colony *destination) {
 		}
 	}
 
-	CalculatedNewQValue(pw, planet_strongness, planet_strongness_new, action_t, num_my_fleets);
+	/// (7.2) Calculate and update new Q-Values!
+	CalculatedNewQValue(pw, planet_strongness, planet_strongness_new, action_t);
 
 	sprintf(logger->buffer, "END TURN:\n");
 	logger->log();
@@ -230,15 +192,27 @@ bool Colony::DoTurn(const PlanetWars &pw, Colony *destination) {
 	return true;
 }
 
-void Colony::CalculatedNewQValue(const PlanetWars &pw, vector<int> &old_strongness, vector<int> &new_strongness, int action_t, int num_fleets){
+vector<int>* Colony::DecideNumShips(const PlanetWars &pw, vector<int> &sources, int dest, Action* selected_action){
+	vector<int>* nums = new vector<int>();
+	for (size_t i = 0; i < sources.size(); i++){
+		nums->push_back(pw.GetPlanet(sources[i])->NumShips() / 2);
+	}
+	return nums;
+}
 
-	//Create previous state
-	old_strongness.push_back(num_fleets);
+void Colony::CalculatedNewQValue(const PlanetWars &pw, vector<int> &old_strongness, vector<int> &new_strongness, int action_t){
+	sprintf(logger->buffer, "CAL NEW Q :: START");
+	logger->log();
+
+	// Create previous state
 	old_strongness.push_back(action_t);
 
-	//Create estimated new state
-	new_strongness.push_back(num_fleets);
+	for (size_t i = 0; i < old_strongness.size(); i++){
+		sprintf(logger->buffer, "old state #%d: %d", i, old_strongness[i]);
+		logger->log();
+	}
 
+	/// Find the action which makes next state's Q-value to be MAX
 	double new_q_max = -99999999;
 	for (size_t i = 0; i < q_value_obj->actions.size(); i++){
 		vector<int> indexes;
@@ -247,20 +221,27 @@ void Colony::CalculatedNewQValue(const PlanetWars &pw, vector<int> &old_strongne
 		}
 		indexes.push_back(i);
 
-		if (q_value_obj->q_values[get_index_for(indexes)] > new_q_max){
-			new_q_max = q_value_obj->q_values[get_index_for(indexes)];
+		int index = get_index_for(indexes);
+		if (q_value_obj->q_values[index] > new_q_max){
+			new_q_max = q_value_obj->q_values[index];
 		}
 	}
 
-	double new_q = (1 - ALPHA_PLANET_Q) * q_value_obj->q_values[get_index_for(old_strongness)];
+	int old_index = get_index_for(old_strongness);
+
+	sprintf(logger->buffer, "new max Q: %f  |  old_index: %d  |  q_value_size: %d  |  old_q: %f", new_q_max, old_index, q_value_obj->num_q_values, q_value_obj->q_values[old_index]);
+	logger->log();
+
+	double new_q = (1 - ALPHA_PLANET_Q) * q_value_obj->q_values[old_index];
 	new_q += ((ALPHA_PLANET_Q) * (Reward(pw, action_t) + DISCOUNT_PLANET * new_q_max));
 
-	q_value_obj->q_values[get_index_for(old_strongness)] = new_q;
+	q_value_obj->q_values[old_index] = new_q;
+	sprintf(logger->buffer, "CAL NEW Q :: END");
+	logger->log();
 }
 
 double Colony::Reward(const PlanetWars &pw, int action_t){
 	int result = 0;
-
 	int total = 0;
 
 	FleetList fleets = pw.Fleets();
@@ -279,6 +260,9 @@ double Colony::Reward(const PlanetWars &pw, int action_t){
 		}
 	}
 
+	if (total == 0){
+		return 0;
+	}
 	return (result / (double)total);
 }
 
@@ -296,8 +280,10 @@ void Colony::UpdateColony(const PlanetWars &pw){
 
 		if (planet->GrowthRate() * planet->NumShips() < attackThreshold){
 			eligable[i] = false;
-		}else{
+		}else if (planet->Owner() == ME){
 			eligable[i] = true;
+		}else{
+			eligable[i] = false;
 		}
 	}
 
@@ -305,7 +291,7 @@ void Colony::UpdateColony(const PlanetWars &pw){
 	if (strongness < MIN_STRONGNESS){
 		strongness = MIN_STRONGNESS;
 	}else if (strongness >= MAX_STRONGNESS){
-		strongness = MAX_STRONGNESS;
+		strongness = MAX_STRONGNESS - 1;
 	}
 
 	strongness = (strongness - MIN_STRONGNESS) / STEPS;
@@ -314,8 +300,6 @@ void Colony::UpdateColony(const PlanetWars &pw){
 }
 
 void Colony::UpdateNextStateColony(const PlanetWars& pw){
-	sprintf(logger->buffer, "UpdateNextStateColony::START");
-	logger->log();
 	strongness_next_state = 0;
 	for (size_t i = 0; i < size; i++){
 		const Planet *planet = pw.GetPlanetNewState(planets[i]);
@@ -338,13 +322,10 @@ void Colony::UpdateNextStateColony(const PlanetWars& pw){
 	if (strongness_next_state < MIN_STRONGNESS){
 		strongness_next_state = MIN_STRONGNESS;
 	}else if (strongness_next_state >= MAX_STRONGNESS){
-		strongness_next_state = MAX_STRONGNESS;
+		strongness_next_state = MAX_STRONGNESS - 1;
 	}
 
 	strongness_next_state = (strongness_next_state - MIN_STRONGNESS) / STEPS;
-
-	sprintf(logger->buffer, "UpdateNextStateColony::END");
-	logger->log();
 }
 
 bool Colony::addPlanet(Planet *planet, const PlanetWars &pw){
@@ -401,9 +382,6 @@ void Colony::QValue::Initialize(const PlanetWars &pw){
 	//For each planet in the colony we try to attack
 	dimension = COLONY_MAX_SIZE;
 
-	// For number of fleets
-	dimension++;
-
 	// For number of actions
 	dimension++;
 
@@ -420,18 +398,14 @@ void Colony::QValue::Initialize(const PlanetWars &pw){
 	sprintf(logger->buffer, "");
 	for (size_t i = 0; i < COLONY_MAX_SIZE; i++){
 		if (i == 0){
-			lengths[i] = STRONGNESS_MAX;
+			lengths[i] = ((PLANET_STRONGNESS_MAX - PLANET_STRONGNESS_MIN) / PLANET_STRONGNESS_STEP);
 			sprintf(logger->buffer, "%s%d", logger->buffer, lengths[i]);
 		}else{
-			lengths[i] = STRONGNESS_MAX;
+			lengths[i] = ((PLANET_STRONGNESS_MAX - PLANET_STRONGNESS_MIN) / PLANET_STRONGNESS_STEP);
 			sprintf(logger->buffer, "%s - %d", logger->buffer, lengths[i]);
 		}
 	}
-	lengths[dimension - 2] = MAX_NUM_MY_FLEETS;
 	lengths[dimension - 1] = actions.size();
-
-	sprintf(logger->buffer, "%s - %d", logger->buffer, lengths[dimension - 1]);
-	logger->log();
 
 	ReadQValues();
 }
@@ -449,11 +423,17 @@ void Colony::QValue::WriteQValues(){
 	out.open (file_name.c_str());
 
 	for (size_t i = 0; i < num_q_values; i++){
+		sprintf(logger->buffer, "Write Step: %d", i);
+		logger->log();
+
 		char buffer[100];
 		sprintf(buffer, MAP_FORMAT, q_values[i]);
 		out << buffer;
 	}
 	out.close();
+
+	sprintf(logger->buffer, "File closed!");
+	logger->log();
 }
 
 void Colony::QValue::ReadQValues(){
