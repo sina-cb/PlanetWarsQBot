@@ -422,17 +422,19 @@ void Colony::QValue::WriteQValues(){
 	ofstream out;
 	out.open (file_name.c_str());
 
+	int zero_count = 0;
 	for (size_t i = 0; i < num_q_values; i++){
-		sprintf(logger->buffer, "Write Step: %d", i);
-		logger->log();
-
 		char buffer[100];
 		sprintf(buffer, MAP_FORMAT, q_values[i]);
 		out << buffer;
+
+		if (q_values[i] == 0){
+			zero_count++;
+		}
 	}
 	out.close();
 
-	sprintf(logger->buffer, "File closed!");
+	sprintf(logger->buffer, "Child Process:\nZeros Count: %d", zero_count);
 	logger->log();
 }
 
@@ -478,6 +480,7 @@ void Colony::QValue::ReadQValues(){
 		while(!in.eof()){
 			in >> inStr;
 			q_values[index] = atof(inStr);
+			index++;
 		}
 		in.close();
 

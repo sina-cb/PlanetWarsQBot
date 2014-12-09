@@ -258,6 +258,7 @@ void CentralGovernment::ReadQValues(){
 		while(!in.eof()){
 			in >> inStr;
 			q_values[index] = atof(inStr);
+			index++;
 		}
 		in.close();
 
@@ -278,12 +279,20 @@ void CentralGovernment::WriteQValues(){
 	ofstream out;
 	out.open (file_name.c_str());
 
+	int zero_count = 0;
 	for (size_t i = 0; i < num_q_values; i++){
 		char buffer[100];
 		sprintf(buffer, MAP_FORMAT, q_values[i]);
 		out << buffer;
+
+		if (q_values[i] == 0){
+			zero_count++;
+		}
 	}
 	out.close();
+
+	sprintf(logger->buffer, "Zero counts after writing: %d", zero_count);
+	logger->log();
 }
 
 void CentralGovernment::InitializeColonies(const PlanetWars &pw){
