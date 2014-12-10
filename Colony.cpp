@@ -103,7 +103,7 @@ bool Colony::DoTurn(const PlanetWars &pw, Colony *destination) {
 	int action_t = -1;
 	int dest = -1;
 
-	//Whether we need to act randomly or based on our Q-values
+	// Whether we need to act randomly or based on our Q-values
 	if (random_action){
 		sprintf(logger->buffer, "Exploitation Step!");
 		logger->log();
