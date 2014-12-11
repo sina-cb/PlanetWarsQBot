@@ -1,4 +1,4 @@
-map_name=map08
+map_name=map06
 
 for i in {1..20000}
 do
