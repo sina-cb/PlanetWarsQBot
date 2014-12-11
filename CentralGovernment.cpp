@@ -361,7 +361,7 @@ void CentralGovernment::WriteQValues(){
 	child_logger.log();
 
 	char map_name[500];
-	sprintf(map_name, "q-values/%s.q", map_name);
+	sprintf(map_name, "q-values/%s.q", map_name_);
 	string file_name = map_name;
 
 	if(remove(file_name.c_str()) != 0){
