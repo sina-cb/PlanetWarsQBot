@@ -29,8 +29,11 @@ void CentralGovernment::DoTurn(const PlanetWars &pw){
 
 	UpdateState(pw);
 	TakeAction(pw);
-	UpdateStateP(pw);
-	UpdateQValues(pw);
+
+	if (action_ships != -1){
+		UpdateStateP(pw);
+		UpdateQValues(pw);
+	}
 
 	sprintf(logger->buffer, "DoTurn:: END\n");
 	logger->log();
@@ -42,10 +45,13 @@ void CentralGovernment::TakeAction(const PlanetWars &pw){
 
 	//Start Q-learning
 	if ((!pw.IsAlivePlanets(ME) || !pw.IsAlivePlanets(ENEMY)) && writeOnce){
+		sprintf(logger->buffer, "\t\tForking to write the Q-Values!");
+		logger->log();
 
 		pid_t pid = fork();
 		if (pid == 0)
 		{
+			//Child
 			WriteQValues();
 			sprintf(logger->buffer, "Child Process: Writing Q-Values complete.");
 			logger->log();
@@ -117,12 +123,16 @@ void CentralGovernment::TakeAction(const PlanetWars &pw){
 
 	sprintf(logger->buffer, "\t\tSelected Action: %d", action_t);
 	logger->log();
-	sprintf(logger->buffer, "\t\tSource Colony: %d , Destination Colony: %d", max_action->source, max_action->destination);
-	logger->log();
 
 	if (action_t != -1){
+		sprintf(logger->buffer, "\t\tSource Colony: %d , Destination Colony: %d", max_action->source, max_action->destination);
+		logger->log();
+
 		action_ships = colonies[max_action->source]->DoTurn(pw, colonies[max_action->destination]);
 		chosen_action = max_action;
+	}else{
+		action_ships = -1;
+		chosen_action = 0;
 	}
 
 	sprintf(logger->buffer, "\t\tTotal ships sent: %d", action_ships);
@@ -345,8 +355,14 @@ void CentralGovernment::ReadQValues(){
 }
 
 void CentralGovernment::WriteQValues(){
-	snprintf(logger->buffer, 100, "q-values/%s.q", COLONY_MAP_NAME);
-	string file_name = logger->buffer;
+	Logger child_logger("Child.log");
+
+	sprintf(child_logger.buffer, "Child Start");
+	child_logger.log();
+
+	char *map_name;
+	snprintf(map_name, 100, "q-values/%s.q", COLONY_MAP_NAME);
+	string file_name = map_name;
 
 	if(remove(file_name.c_str()) != 0)
 		perror("Error deleting file");
@@ -368,8 +384,8 @@ void CentralGovernment::WriteQValues(){
 	}
 	out.close();
 
-	sprintf(logger->buffer, "Child Process:: Zero counts after writing: %d", zero_count);
-	logger->log();
+	sprintf(child_logger.buffer, "Child Process:: Zero counts after writing: %d", zero_count);
+	child_logger.log();
 }
 
 void CentralGovernment::InitializeColonies(const PlanetWars &pw){
