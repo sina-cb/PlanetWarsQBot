@@ -360,14 +360,17 @@ void CentralGovernment::WriteQValues(){
 	sprintf(child_logger.buffer, "Child Start");
 	child_logger.log();
 
-	char *map_name;
-	snprintf(map_name, 100, "q-values/%s.q", COLONY_MAP_NAME);
+	char map_name[500];
+	sprintf(map_name, "q-values/%s.q", COLONY_MAP_NAME);
 	string file_name = map_name;
 
-	if(remove(file_name.c_str()) != 0)
-		perror("Error deleting file");
-	else
-		puts("File successfully deleted");
+	if(remove(file_name.c_str()) != 0){
+		sprintf(child_logger.buffer, "Error deleting file");
+		child_logger.log();
+	}else{
+		sprintf(child_logger.buffer, "File Deleted!");
+		child_logger.log();
+	}
 
 	ofstream out;
 	out.open (file_name.c_str());
