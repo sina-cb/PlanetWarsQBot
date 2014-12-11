@@ -58,6 +58,16 @@ private:
 	bool eligable[COLONY_MAX_SIZE];
 	int size;
 
+	enum STATE {
+		CAREFUL, //in this state the ai is really careful with its moves
+		DEFAULT  //this is the default state of the AI
+	};
+
+	vector<double> influenceMap; //influence map
+	STATE state;
+	vector<int> shipRequestTable; // this will be a table that has all the ships we request to every location
+	vector<int> shipAvailableTable; //this table will have all the ships that is available to us
+
 public:
 	class Action{
 	public:
