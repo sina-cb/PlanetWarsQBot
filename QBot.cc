@@ -12,15 +12,20 @@ int main(int argc, char *argv[]) {
 	Logger *logger = new Logger("MAIN.log");
 
 	int iteration = 0;
-	if (argc == 2){
+	char* map_name;
+	if (argc == 3){
 		iteration = atoi(argv[1]);
+		map_name = argv[2];
 	}
 	iteration = 0;
 
 	sprintf(logger->buffer, "%d", argc);
 	logger->log();
 
-	CentralGovernment federal;
+	sprintf(logger->buffer, "%s", map_name);
+	logger->log();
+
+	CentralGovernment federal(map_name);
 	int turn = 0;
 
 	std::string current_line;

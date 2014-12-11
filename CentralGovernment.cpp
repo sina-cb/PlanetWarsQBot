@@ -11,11 +11,11 @@
 #include <time.h>
 using namespace std;
 
-CentralGovernment::CentralGovernment() {
+CentralGovernment::CentralGovernment(char* map_name) {
 	logger = new Logger("CentralGovernment.log");
 	srand(time(NULL));
 	writeOnce = true;
-
+	map_name_ = map_name;
 	game_state = ON_GOING;
 }
 
@@ -304,7 +304,7 @@ double CentralGovernment::Reward(const PlanetWars &pw){
 }
 
 void CentralGovernment::ReadQValues(){
-	snprintf(logger->buffer, 100, "q-values/%s.q", COLONY_MAP_NAME);
+	snprintf(logger->buffer, 100, "q-values/%s.q", map_name_);
 	string file_name = logger->buffer;
 	bool file_check = check_file_exists(file_name);
 
@@ -361,7 +361,7 @@ void CentralGovernment::WriteQValues(){
 	child_logger.log();
 
 	char map_name[500];
-	sprintf(map_name, "q-values/%s.q", COLONY_MAP_NAME);
+	sprintf(map_name, "q-values/%s.q", map_name);
 	string file_name = map_name;
 
 	if(remove(file_name.c_str()) != 0){

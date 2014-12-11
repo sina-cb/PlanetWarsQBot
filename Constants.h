@@ -30,8 +30,6 @@
 */
 #define COLONY_DISCOUNT 0.8
 
-
-#define COLONY_MAP_NAME "map08-central"
 #define MAP_FORMAT "%.8f\n"
 
 #define COLONY_REWARD_MIN -2000

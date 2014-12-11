@@ -19,7 +19,7 @@
 class CentralGovernment {
 
 public:
-	CentralGovernment();
+	CentralGovernment(char* map_name);
 	virtual ~CentralGovernment();
 
 	/**
@@ -35,6 +35,8 @@ public:
 	void InitializeColonies(const PlanetWars &pw);
 
 	bool WriteOnce(){return writeOnce;}
+
+	char* map_name_;
 
 private:
 	class Action;
