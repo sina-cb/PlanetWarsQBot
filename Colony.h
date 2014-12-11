@@ -14,6 +14,11 @@
 #include "Logger.cpp"
 #include "Constants.h"
 
+enum STATE {
+	CAREFUL = 0, //in this state the ai is really careful with its moves
+	DEFAULT = 1  //this is the default state of the AI
+};
+
 class Colony {
 public:
 	class Action;
@@ -49,6 +54,30 @@ public:
 
 	void SetEligable(int index, bool eligable);
 
+	vector<double>* makeInfluenceMap(const PlanetWars &pw);
+	STATE getState(const PlanetWars &pw);
+
+	vector<int>* MyPlanets(const PlanetWars &pw);
+	vector<int>* MyFleets(const PlanetWars &pw);
+
+	vector<int>* EnemyPlanets(const PlanetWars &pw);
+	vector<int>* EnemyFleets(const PlanetWars &pw);
+
+	vector<int>* NeutralPlanets(const PlanetWars &pw);
+	vector<int>* PlanetsCombined(const PlanetWars &pw);
+
+	vector<int>* getIncomingFleets(const PlanetWars &pw, const Planet* planet);
+
+	int getLeastShipsNeeded(const PlanetWars &pw, const Planet* source, const Planet* dest, int div, int confidence);
+
+	double getCarefulHeuristics(const PlanetWars &pw, int source, int dest, int planetNumShips);
+	double getCarefulHeuristics(const PlanetWars &pw, const Planet *source, const Planet *dest);
+
+	double getHeuristics(const Planet *planet, int minInfluence);
+	double getHeuristics(int planet, int growthrate, int numships, int minInfluence);
+
+	int calcConfidence(const PlanetWars &pw, const Planet *planet);
+
 private:
 	Logger *logger;
 	std::vector<Action*> actions;
@@ -58,15 +87,13 @@ private:
 	bool eligable[COLONY_MAX_SIZE];
 	int size;
 
-	enum STATE {
-		CAREFUL, //in this state the ai is really careful with its moves
-		DEFAULT  //this is the default state of the AI
-	};
+	Colony* destination_;
 
-	vector<double> influenceMap; //influence map
+	vector<double> *influenceMap; //influence map
+	vector<int> *shipRequestTable; // this will be a table that has all the ships we request to every location
+	vector<int> *shipAvailableTable; //this table will have all the ships that is available to us
+
 	STATE state;
-	vector<int> shipRequestTable; // this will be a table that has all the ships we request to every location
-	vector<int> shipAvailableTable; //this table will have all the ships that is available to us
 
 public:
 	class Action{

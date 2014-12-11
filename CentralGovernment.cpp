@@ -433,9 +433,11 @@ void CentralGovernment::InitializeColonies(const PlanetWars &pw){
 	int count = 0;
 	for (size_t i = 0; i < colonies.size(); i++){
 		for (size_t j = 0; j < colonies.size(); j++){
-			Action *action = new Action(i, j, count);
-			count++;
-			actions.push_back(action);
+			if (i != j){
+				Action *action = new Action(i, j, count);
+				count++;
+				actions.push_back(action);
+			}
 		}
 	}
 

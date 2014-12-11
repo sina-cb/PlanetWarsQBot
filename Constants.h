@@ -33,5 +33,6 @@
 enum GameState {ON_GOING = 0, WIN = 1, LOST = 2};
 //********************************************************//
 
+#define MAX_VALUE 9999999999
 
 #endif /* CONSTANTS_H_ */

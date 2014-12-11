@@ -46,6 +46,11 @@ public:
 		myfile << buffer << endl;
 	}
 
+	inline void log_here(){
+		sprintf(buffer, "HEREEE!!!");
+		myfile << buffer << endl;
+	}
+
 };
 
 #endif /* LOGGER_CPP_ */
