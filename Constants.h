@@ -20,7 +20,6 @@
 //****************LEARNING****************//
 #define COLONY_EXPLOITION 0.3
 #define COLONY_ALPHA 0.9
-<<<<<<< HEAD
 #define COLONY_DISCOUNT 0.85
 
 //*****************RUNNING*****************//
@@ -29,9 +28,8 @@
 #define COLONY_ALPHA 0.9
 #define COLONY_DISCOUNT 0.85
 */
-=======
 #define COLONY_DISCOUNT 0.8
->>>>>>> 8d5c9994f2a716e43bc6e13e44607b28566c213d
+
 
 #define COLONY_MAP_NAME "map07-central"
 #define MAP_FORMAT "%.8f\n"
