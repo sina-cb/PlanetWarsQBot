@@ -56,7 +56,7 @@ private:
 	void ReadQValues();
 	void WriteQValues();
 
-	double Reward(const PlanetWars &pw, Action *action);
+	double Reward(const PlanetWars &pw);
 
 	double* q_values;
 	int num_q_values;
@@ -64,9 +64,12 @@ private:
 	int dimension;
 	int* lengths;
 
+	Action* chosen_action;
+	int action_ships;
+	GameState game_state;
+
 	vector<int> state;
-	vector<int> stateP;
-	int chosen_action;
+	vector<int> state_p;
 
 	class Action{
 	public:
@@ -82,13 +85,15 @@ private:
 	};
 
 	inline int get_index_for(std::vector<int> indexes){
+		assert(indexes.size() == dimension);
+
 		int temp = 1;
 		int result = 0;
-		for (size_t i = 1; i < dimension; i++){
+		for (size_t i = 1; i < indexes.size(); i++){
 			temp *= lengths[i];
 		}
 
-		for (size_t i = 0; i < dimension; i++){
+		for (size_t i = 0; i < indexes.size(); i++){
 			result += indexes[i] * temp;
 			if (i + 1 < dimension){
 				temp /= lengths[i + 1];
@@ -99,8 +104,8 @@ private:
 	}
 
 	inline bool check_file_exists (const std::string& name) {
-	  struct stat buffer;
-	  return (stat (name.c_str(), &buffer) == 0);
+		struct stat buffer;
+		return (stat (name.c_str(), &buffer) == 0);
 	}
 };
 

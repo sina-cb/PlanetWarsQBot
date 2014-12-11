@@ -13,16 +13,24 @@
 //Central Government Related Constants
 #define COLONY_MAX_SIZE 5
 
-#define COLONY_STRONGNESS_MIN -4000
-#define COLONY_STRONGNESS_MAX 4000
-#define COLONY_STRONGNESS_STEP 1600
+#define COLONY_STRONGNESS_MIN -2000
+#define COLONY_STRONGNESS_MAX 2000
+#define COLONY_STRONGNESS_STEP 800
 
-#define ALPHA_COLONY_Q 0.9
-#define COLONY_EXPLOITION 0.5
+#define COLONY_EXPLOITION 0.9
+#define COLONY_ALPHA 0.9
 #define COLONY_DISCOUNT 0.2
 
 #define COLONY_MAP_NAME "map07-central"
 #define MAP_FORMAT "%.8f\n"
+
+#define COLONY_REWARD_MIN -2000
+#define COLONY_REWARD_MAX 2000
+
+#define GAME_WIN_REWARD 1000
+#define GAME_LOSE_REWARD -1000
+
+enum GameState {ON_GOING = 0, WIN = 1, LOST = 2};
 //********************************************************//
 
 

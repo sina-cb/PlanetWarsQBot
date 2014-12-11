@@ -25,13 +25,12 @@ public:
 	/**
 	 * Runs Q-Learning at the Planet Level, to find the destination planet to attack
 	 */
-	bool DoTurn(const PlanetWars &pw, Colony* destination);
+	int DoTurn(const PlanetWars &pw, Colony* destination);
 
 	/**
 	 * This function should be run at the beginning of each turn to update the colony
 	 * parameters.
 	 */
-	void UpdateColony(const PlanetWars &pw);
 	void UpdateNextStateColony(const PlanetWars &pw);
 
 	bool addPlanet(Planet *planet, const PlanetWars &pw);
@@ -45,18 +44,14 @@ public:
 
 	void Initialize(const PlanetWars &pw);
 
-	int Strongness();
-	int StrongnessEstimation();
-
 	double Reward(const PlanetWars &pw, int action_t);
-	std::vector<int>* DecideNumShips(const PlanetWars &pw, vector<int> &sources, int dest, Action* selected_action);
+	std::vector<int>* DecideNumShips(const PlanetWars &pw, vector<int> &sources, int dest);
+
+	void SetEligable(int index, bool eligable);
 
 private:
 	Logger *logger;
 	std::vector<Action*> actions;
-
-	int state;
-	int strongness_next_state;
 
 	int id;
 	int planets[COLONY_MAX_SIZE];

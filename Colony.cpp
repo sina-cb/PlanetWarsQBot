@@ -34,7 +34,7 @@ Colony::~Colony() {
 // that currently exist. Inside this function, you issue orders using the
 // pw.IssueOrder() function. For example, to send 10 ships from planet 3 to
 // planet 8, you would say pw.IssueOrder(3, 8, 10).
-bool Colony::DoTurn(const PlanetWars &pw, Colony *destination) {
+int Colony::DoTurn(const PlanetWars &pw, Colony *destination) {
 	sprintf(logger->buffer, "START TURN:");
 	logger->log();
 
@@ -68,93 +68,32 @@ bool Colony::DoTurn(const PlanetWars &pw, Colony *destination) {
 
 	// (4) Send half the ships from my strongest planet to the weakest
 	// planet that I do not own.
+	int total_ships = 0;
 	if (sources.size() > 0 && dest != -1){
+		vector<int> *nums = DecideNumShips(pw, sources, dest);
 		for (size_t i = 0; i < sources.size(); i++){
-			int num_ships = pw.GetPlanet(sources[i])->NumShips() / 2;
-			pw.IssueOrder(sources[i], dest, num_ships);
-			sprintf(logger->buffer, "Attack %d: Source: %d, Dest.: %d Ships: %d", (i + 1), sources[i], dest, num_ships);
+			pw.IssueOrder(sources[i], dest, (*nums)[i]);
+			total_ships += (*nums)[i];
+			sprintf(logger->buffer, "Attack %d: Source: %d, Dest.: %d Ships: %d", (i + 1), sources[i], dest, (*nums)[i]);
 			logger->log();
 		}
+	}else{
+		sprintf(logger->buffer, "DO NOTHING");
+		logger->log();
 	}
 
 	sprintf(logger->buffer, "END TURN:\n");
 	logger->log();
 
-	return true;
+	return total_ships;
 }
 
-vector<int>* Colony::DecideNumShips(const PlanetWars &pw, vector<int> &sources, int dest, Action* selected_action){
+vector<int>* Colony::DecideNumShips(const PlanetWars &pw, vector<int> &sources, int dest){
 	vector<int>* nums = new vector<int>();
 	for (size_t i = 0; i < sources.size(); i++){
 		nums->push_back(pw.GetPlanet(sources[i])->NumShips() / 2);
 	}
 	return nums;
-}
-
-double Colony::Reward(const PlanetWars &pw, int action_t){
-	return 0;
-}
-
-void Colony::UpdateColony(const PlanetWars &pw){
-	state = 0;
-	for (size_t i = 0; i < size; i++){
-		const Planet *planet = pw.GetPlanet(planets[i]);
-		if (planet->Owner() == ME){
-			state += planet->GrowthRate() * planet->NumShips();
-		}else if(planet->Owner() == ENEMY){
-			state -= planet->GrowthRate() * planet->NumShips();
-		}else if(planet->Owner() == NEUTRAL){
-			state -= planet->NumShips();
-		}
-
-		if (planet->GrowthRate() * planet->NumShips() < PLANET_ELIGIBILITY_CONSTANT){
-			eligable[i] = false;
-		}else if (planet->Owner() == ME){
-			eligable[i] = true;
-		}else{
-			eligable[i] = false;
-		}
-	}
-
-	//Discretization of strongness parameter
-	if (state < COLONY_STRONGNESS_MIN){
-		state = COLONY_STRONGNESS_MIN;
-	}else if (state >= COLONY_STRONGNESS_MAX){
-		state = COLONY_STRONGNESS_MAX - 1;
-	}
-
-	state = (state - COLONY_STRONGNESS_MIN) / COLONY_STRONGNESS_STEP;
-
-	//TODO: We haven't updated the colonyType variable, if you needed it, update it! :D
-}
-
-void Colony::UpdateNextStateColony(const PlanetWars& pw){
-	strongness_next_state = 0;
-	for (size_t i = 0; i < size; i++){
-		const Planet *planet = pw.GetPlanetNewState(planets[i]);
-		if (planet->Owner() == ME){
-			strongness_next_state += planet->GrowthRate() * planet->NumShips();
-		}else if(planet->Owner() == ENEMY){
-			strongness_next_state -= planet->GrowthRate() * planet->NumShips();
-		}else if(planet->Owner() == NEUTRAL){
-			strongness_next_state -= planet->NumShips();
-		}
-
-		if (planet->GrowthRate() * planet->NumShips() < PLANET_ELIGIBILITY_CONSTANT){
-			eligable[i] = false;
-		}else{
-			eligable[i] = true;
-		}
-	}
-
-	//Discretization of strongness parameter
-	if (strongness_next_state < COLONY_STRONGNESS_MIN){
-		strongness_next_state = COLONY_STRONGNESS_MIN;
-	}else if (strongness_next_state >= COLONY_STRONGNESS_MAX){
-		strongness_next_state = COLONY_STRONGNESS_MAX - 1;
-	}
-
-	strongness_next_state = (strongness_next_state - COLONY_STRONGNESS_MIN) / COLONY_STRONGNESS_STEP;
 }
 
 bool Colony::addPlanet(Planet *planet, const PlanetWars &pw){
@@ -165,6 +104,24 @@ bool Colony::addPlanet(Planet *planet, const PlanetWars &pw){
 	size++;
 
 	return true;
+}
+
+bool Colony::HasFriendlyPlanet(const PlanetWars &pw){
+	for (size_t i = 0; i < size; i++){
+		if (pw.GetPlanet(planets[i])->Owner() == ME){
+			return true;
+		}
+	}
+	return false;
+}
+
+void Colony::Initialize(const PlanetWars &pw){
+	//For each planet in the colony we try to attack
+	for (size_t i = 0; i < COLONY_MAX_SIZE; i++){
+		actions.push_back(new Action(i));
+	}
+	//NO-OP Action
+	actions.push_back(new Action(-1));
 }
 
 bool Colony::IfPlanetHere(const PlanetWars &pw, int planetID){
@@ -188,28 +145,10 @@ int Colony::Size(){
 	return size;
 }
 
-int Colony::Strongness(){
-	return state;
+double Colony::Reward(const PlanetWars &pw, int action_t){
+	return 0;
 }
 
-int Colony::StrongnessEstimation(){
-	return strongness_next_state;
-}
-
-bool Colony::HasFriendlyPlanet(const PlanetWars &pw){
-	for (size_t i = 0; i < size; i++){
-		if (pw.GetPlanet(planets[i])->Owner() == ME){
-			return true;
-		}
-	}
-	return false;
-}
-
-void Colony::Initialize(const PlanetWars &pw){
-	//For each planet in the colony we try to attack
-	for (size_t i = 0; i < COLONY_MAX_SIZE; i++){
-		actions.push_back(new Action(i));
-	}
-	//NO-OP Action
-	actions.push_back(new Action(-1));
+void Colony::SetEligable(int index, bool elig){
+	eligable[index] = elig;
 }
