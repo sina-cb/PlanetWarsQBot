@@ -19,7 +19,7 @@
 
 #define COLONY_EXPLOITION 0.3
 #define COLONY_ALPHA 0.9
-#define COLONY_DISCOUNT 0.2
+#define COLONY_DISCOUNT 0.8
 
 #define COLONY_MAP_NAME "map07-central"
 #define MAP_FORMAT "%.8f\n"
