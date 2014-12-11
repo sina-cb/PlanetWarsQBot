@@ -43,33 +43,30 @@ private:
 	std::vector<Colony*> colonies;
 	std::vector<Action*> actions;
 
-	bool save_q_values;
+	bool writeOnce;
 
 	/**
 	 * Update Colony Parameters at the beginning of each Turn.
 	 */
-	void UpdateColonies(const PlanetWars &pw);
-	void EstimateNextState(const PlanetWars &pw);
+	void UpdateState(const PlanetWars &pw);
+	void TakeAction(const PlanetWars &pw);
+	void UpdateStateP(const PlanetWars &pw);
+	void UpdateQValues(const PlanetWars &pw);
 
-	void CalculatedNewQValue(const PlanetWars &pw, int action_t);
 	void ReadQValues();
 	void WriteQValues();
 
-	/**
-	 * This function is used to do Q-learning at the Colony Level
-	 * This should select a Colony to attack and call the DoTurn function
-	 * in each Colony.
-	 */
-	void HandleColonies(const PlanetWars &pw);
+	double Reward(const PlanetWars &pw, Action *action);
 
 	double* q_values;
 	int num_q_values;
 
 	int dimension;
 	int* lengths;
-	bool writeOnce;
 
-	double Reward(const PlanetWars &pw, Action *action);
+	vector<int> state;
+	vector<int> stateP;
+	int chosen_action;
 
 	class Action{
 	public:

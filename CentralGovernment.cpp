@@ -25,14 +25,16 @@ void CentralGovernment::DoTurn(const PlanetWars &pw){
 	sprintf(logger->buffer, "Start DoTurn Central");
 	logger->log();
 
-	UpdateColonies(pw);
-	HandleColonies(pw);
+	UpdateState(pw);
+//	TakeAction(pw);
+//	UpdateStateP(pw);
+//	UpdateQValues(pw);
 
 	sprintf(logger->buffer, "End DoTurn Central\n");
 	logger->log();
 }
 
-void CentralGovernment::HandleColonies(const PlanetWars &pw){
+void CentralGovernment::TakeAction(const PlanetWars &pw){
 	//Start Q-learning
 
 	if ((!pw.IsAlivePlanets(ME) || !pw.IsAlivePlanets(ENEMY)) && writeOnce){
@@ -41,10 +43,8 @@ void CentralGovernment::HandleColonies(const PlanetWars &pw){
 		if (pid == 0)
 		{
 			WriteQValues();
-			colonies[0]->QValueObj()->WriteQValues();
 			sprintf(logger->buffer, "Child Process: Writing Q-Values complete.");
 			logger->log();
-
 			exit(0);
 		}else if (pid > 0){
 			//Parent
@@ -57,7 +57,7 @@ void CentralGovernment::HandleColonies(const PlanetWars &pw){
 		writeOnce = false;
 	}
 
-	bool random_action = (((rand() % 1000) / 1000.0) > EXPLOITATION_COLONY) ? true : false;
+	bool random_action = (((rand() % 1000) / 1000.0) > COLONY_EXPLOITION) ? true : false;
 
 	if (!pw.IsAlivePlanets(ME)){
 		sprintf(logger->buffer, "I died at turn %d.", pw.Turn());
@@ -114,13 +114,10 @@ void CentralGovernment::HandleColonies(const PlanetWars &pw){
 		logger->log();
 
 		bool result = colonies[max_action->source]->DoTurn(pw, colonies[max_action->destination]);
-
-		EstimateNextState(pw);
-		CalculatedNewQValue(pw, action_t);
 	}
 }
 
-void CentralGovernment::CalculatedNewQValue(const PlanetWars &pw, int action_t){
+void CentralGovernment::UpdateQValues(const PlanetWars &pw){
 	double alpha = ALPHA_COLONY_Q;
 
 	if (pw.Iteration() != 0){
@@ -133,7 +130,7 @@ void CentralGovernment::CalculatedNewQValue(const PlanetWars &pw, int action_t){
 		sprintf(logger->buffer, "Strongness #%d: %d", j, colonies[j]->Strongness());
 		logger->log();
 	}
-	state.push_back(action_t);
+	//state.push_back(action_t);
 
 	/*sprintf(logger->buffer, "action: %d", action_t);
 	logger->log();
@@ -165,23 +162,23 @@ void CentralGovernment::CalculatedNewQValue(const PlanetWars &pw, int action_t){
 		}
 	}
 
-/*	sprintf(logger->buffer, "q_old: %f  |  alpha: %f  |  Reward: %f  |  Discount: %d  |  max_est: %f", q_old, alpha, Reward(pw, actions[action_t]), DISCOUNT_COLONY, max_est_q);
+	/*	sprintf(logger->buffer, "q_old: %f  |  alpha: %f  |  Reward: %f  |  Discount: %d  |  max_est: %f", q_old, alpha, Reward(pw, actions[action_t]), DISCOUNT_COLONY, max_est_q);
 	logger->log();
 
 	sprintf(logger->buffer, "Index: %d", get_index_for(state));
 	logger->log();*/
 
-	double q_new = ((1 - alpha) * q_old) + (alpha * (Reward(pw, actions[action_t]) + DISCOUNT_COLONY * max_est_q));
-	q_values[get_index_for(state)] = q_new;
+	/*double q_new = ((1 - alpha) * q_old) + (alpha * (Reward(pw, actions[action_t]) + COLONY_DISCOUNT * max_est_q));
+	q_values[get_index_for(state)] = q_new;*/
 }
 
-void CentralGovernment::UpdateColonies(const PlanetWars &pw){
+void CentralGovernment::UpdateState(const PlanetWars &pw){
 	for (size_t i = 0; i < colonies.size(); i++){
 		colonies[i]->UpdateColony(pw);
 	}
 }
 
-void CentralGovernment::EstimateNextState(const PlanetWars &pw){
+void CentralGovernment::UpdateStateP(const PlanetWars &pw){
 	for (size_t i = 0; i < colonies.size(); i++){
 		colonies[i]->UpdateNextStateColony(pw);
 	}
@@ -192,7 +189,7 @@ double CentralGovernment::Reward(const PlanetWars &pw, Action *action){
 
 	int total = 0;
 
-	FleetList fleets = pw.Fleets();
+	/*FleetList fleets = pw.Fleets();
 	for (size_t i = 0; i < fleets.size(); i++){
 		Fleet* fleet = fleets[i];
 		if (colonies[action->destination]->IfPlanetHere(pw, fleet->DestinationPlanet()) ||
@@ -207,7 +204,7 @@ double CentralGovernment::Reward(const PlanetWars &pw, Action *action){
 				}
 			}
 		}
-	}
+	}*/
 
 	if (total == 0){
 		return 0;
@@ -217,7 +214,7 @@ double CentralGovernment::Reward(const PlanetWars &pw, Action *action){
 }
 
 void CentralGovernment::ReadQValues(){
-	snprintf(logger->buffer, 100, "%s.q", MAP_NAME_CENTRAL);
+	snprintf(logger->buffer, 100, "q-values/%s.q", COLONY_MAP_NAME);
 	string file_name = logger->buffer;
 	bool file_check = check_file_exists(file_name);
 
@@ -268,7 +265,7 @@ void CentralGovernment::ReadQValues(){
 }
 
 void CentralGovernment::WriteQValues(){
-	snprintf(logger->buffer, 100, "%s.q", MAP_NAME_CENTRAL);
+	snprintf(logger->buffer, 100, "q-values/%s.q", COLONY_MAP_NAME);
 	string file_name = logger->buffer;
 
 	if(remove(file_name.c_str()) != 0)
@@ -291,7 +288,7 @@ void CentralGovernment::WriteQValues(){
 	}
 	out.close();
 
-	sprintf(logger->buffer, "Zero counts after writing: %d", zero_count);
+	sprintf(logger->buffer, "Child Process:: Zero counts after writing: %d", zero_count);
 	logger->log();
 }
 
@@ -323,7 +320,6 @@ void CentralGovernment::InitializeColonies(const PlanetWars &pw){
 		colonies.push_back(colony);
 		colonyID++;
 	}
-
 	sprintf(logger->buffer, "Colonies Size: %d", (int)colonies.size());
 	logger->log();
 	for (size_t i = 0; i < colonies.size(); i++){
@@ -341,8 +337,6 @@ void CentralGovernment::InitializeColonies(const PlanetWars &pw){
 		}
 	}
 
-	UpdateColonies(pw);
-
 	dimension = colonies.size() + 1;
 	sprintf(logger->buffer, "Q-Value array dimension: %d", dimension);
 	logger->log();
@@ -350,23 +344,17 @@ void CentralGovernment::InitializeColonies(const PlanetWars &pw){
 	sprintf(logger->buffer, "");
 	for (size_t i = 0; i < dimension - 1; i++){
 		if (i == 0){
-			lengths[i] = ((MAX_STRONGNESS - MIN_STRONGNESS) / STEPS);
+			lengths[i] = ((COLONY_STRONGNESS_MAX - COLONY_STRONGNESS_MIN) / COLONY_STRONGNESS_STEP);
 			sprintf(logger->buffer, "%s%d", logger->buffer, lengths[i]);
 		}else{
-			lengths[i] = ((MAX_STRONGNESS - MIN_STRONGNESS) / STEPS);
+			lengths[i] = ((COLONY_STRONGNESS_MAX - COLONY_STRONGNESS_MIN) / COLONY_STRONGNESS_STEP);
 			sprintf(logger->buffer, "%s - %d", logger->buffer, lengths[i]);
 		}
 	}
 	lengths[dimension - 1] = actions.size();
-	sprintf(logger->buffer, "%s - %d", logger->buffer, lengths[dimension - 1]);
-	logger->log();
 
 	ReadQValues();
 
-	Colony::QValue *q_value_obj = new Colony::QValue();
-	q_value_obj->Initialize(pw);
-
-	for(size_t i = 0; i < colonies.size(); i++){
-		colonies[i]->QValueObj(q_value_obj);
-	}
+	sprintf(logger->buffer, "%s - %d", logger->buffer, lengths[dimension - 1]);
+	logger->log();
 }

@@ -24,7 +24,7 @@ clean_logs:
 	rm -rf *.log
 
 clean_q:
-	rm -rf *.q
+	rm -rf q-values/*.q
 
 clean_everything:
-	rm -rf *.o QBot.bin *.log *.q
+	rm -rf *.o QBot.bin *.log q-values/*.q replays/*

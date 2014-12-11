@@ -16,7 +16,6 @@
 
 class Colony {
 public:
-	class QValue;
 	class Action;
 
 	Colony();
@@ -41,44 +40,30 @@ public:
 
 	int ID();
 	int Size();
+	bool HasFriendlyPlanet(const PlanetWars &pw);
+	int* Planets() {return planets;}
+
+	void Initialize(const PlanetWars &pw);
+
 	int Strongness();
 	int StrongnessEstimation();
-	bool HasFriendlyPlanet(const PlanetWars &pw);
-
-	int* Planets() {return planets;}
-	void QValueObj(QValue *q_value_obj){this->q_value_obj = q_value_obj;}
-	QValue* QValueObj(){return q_value_obj;}
 
 	double Reward(const PlanetWars &pw, int action_t);
 	std::vector<int>* DecideNumShips(const PlanetWars &pw, vector<int> &sources, int dest, Action* selected_action);
-	void CalculatedNewQValue(const PlanetWars &pw, vector<int> &old_strongness, vector<int> &new_strongness, int action_t);
 
-	class QValue{
-	public:
-		QValue(){
-			logger = new Logger("Colonies.log");
-		}
+private:
+	Logger *logger;
+	std::vector<Action*> actions;
 
-		double* q_values;
-		int num_q_values;
+	int state;
+	int strongness_next_state;
 
-		int dimension;
-		int* lengths;
+	int id;
+	int planets[COLONY_MAX_SIZE];
+	bool eligable[COLONY_MAX_SIZE];
+	int size;
 
-		std::vector<Action*> actions;
-
-		void Initialize(const PlanetWars &pw);
-		void ReadQValues();
-		void WriteQValues();
-
-		Logger *logger;
-
-		inline bool check_file_exists (const std::string& name) {
-			struct stat buffer;
-			return (stat (name.c_str(), &buffer) == 0);
-		}
-	};
-
+public:
 	class Action{
 	public:
 		Action(int destication){
@@ -87,38 +72,6 @@ public:
 
 		int destination;
 	};
-
-private:
-	QValue *q_value_obj;
-
-	int strongness;
-	int strongness_next_state;
-	int attackThreshold;
-
-	int id;
-	int planets[COLONY_MAX_SIZE];
-	bool eligable[COLONY_MAX_SIZE];
-	int size;
-	std::vector<Fleet*> fleets;
-
-	Logger *logger;
-
-	inline int get_index_for(std::vector<int> indexes){
-		int temp = 1;
-		int result = 0;
-		for (size_t i = 1; i < q_value_obj->dimension; i++){
-			temp *= q_value_obj->lengths[i];
-		}
-
-		for (size_t i = 0; i < q_value_obj->dimension; i++){
-			result += indexes[i] * temp;
-			if (i + 1 < q_value_obj->dimension){
-				temp /= q_value_obj->lengths[i + 1];
-			}
-		}
-
-		return result;
-	}
 };
 
 #endif /* COLONY_H_ */
