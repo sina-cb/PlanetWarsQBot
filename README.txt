@@ -19,3 +19,15 @@ is a brief summary.
     information about how to use the tools.
   * The example_bots directory contains some sample bots for you to test your
     own bot against.
+
+####################################################################################
+
+You can make the project just using the make command. It will compile the project and create the QBot.bin binary file.
+After compiling the project, you should run the project using the Game Engine provided by Google. To do so, you can use the 
+play_against_others.sh shell scripts. Running this shell script will automatically run the game engine and two bots with in a 
+specific map. You can change these parameters in the script and it is pretty straight forward.
+
+To train the bot on a particular map, you can use the no_replay_play_against_others.sh shell script which basically runs the game
+N times and waits after each run so that the engine can have some time to save the Q-values. This script also is dependent on a
+map file and it learns the Q-values for that particular map.
+

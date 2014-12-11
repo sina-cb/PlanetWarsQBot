@@ -23,32 +23,32 @@ public:
 	char buffer [500];
 
 	Logger(){
-		//myfile.open("log.log");
+		myfile.open("log.log");
 	}
 
 	Logger(char* filename){
-		//myfile.open(filename);
+		myfile.open(filename);
 	}
 
 	~Logger(){
-		//myfile.close();
+		myfile.close();
 	}
 
 	inline void log(){
-		//myfile << buffer << endl;
+		myfile << buffer << endl;
 	}
 
 	inline void log_array(char* initial_string, std::vector<int> vec){
-		/*sprintf(buffer, "%s", initial_string);
+		sprintf(buffer, "%s", initial_string);
 		for (int j = 0; j < vec.size(); j++){
 			sprintf(buffer, "%s%d  ", buffer, vec[j]);
 		}
-		myfile << buffer << endl;*/
+		myfile << buffer << endl;
 	}
 
 	inline void log_here(){
-		/*sprintf(buffer, "HEREEE!!!");
-		myfile << buffer << endl;*/
+		sprintf(buffer, "HEREEE!!!");
+		myfile << buffer << endl;
 	}
 
 };
