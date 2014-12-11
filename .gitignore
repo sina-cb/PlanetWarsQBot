@@ -28,5 +28,5 @@
 *.out
 *.app
 *.log
-log.*
+log.txt
 *.replay
